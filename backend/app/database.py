@@ -45,6 +45,9 @@ def configure_database(database_url: Optional[str] = None):
     SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=_engine)
     engine = _engine
 
+# Global lock for serializing DB writes when multiple threads access the same SQLite connection.
+DB_LOCK = threading.Lock()
+
 
 # Global lock for serializing DB writes when multiple threads access the same SQLite connection.
 DB_LOCK = threading.RLock()

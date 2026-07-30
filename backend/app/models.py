@@ -136,6 +136,7 @@ class PersistentKV(Base):
     key = Column(String, primary_key=True)
     value = Column(JSON, nullable=True)
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+<<<<<<< HEAD
 
 
 class MFAConfig(Base):
@@ -202,3 +203,5 @@ class UploadChunk(Base):
     error_message = Column(Text, nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     uploaded_at = Column(DateTime(timezone=True), nullable=True)
+=======
+>>>>>>> ae7990a (feat(agents): productionize orchestration - async supervisor, persistent context (sqlite/redis), DB lock for concurrency, audits, retries/timeouts, and concurrent tests)
