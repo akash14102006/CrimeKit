@@ -1,0 +1,46 @@
+apiVersion: 1
+
+datasources:
+  - name: Prometheus
+    type: prometheus
+    access: proxy
+    url: http://prometheus:9090
+    isDefault: true
+    editable: false
+    jsonData:
+      httpMethod: POST
+      exemplarTraceIdDestinations:
+        - name: traceID
+          datasourceUid: jaeger
+      timeInterval: "15s"
+    secureJsonData: {}
+
+  - name: Jaeger
+    type: jaeger
+    access: proxy
+    url: http://jaeger-query:16686
+    editable: false
+    jsonData:
+      tracesToLogsV2:
+        datasourceUid: loki
+        filterByTraceID: true
+        filterBySpanID: true
+      tracesToMetrics:
+        datasourceUid: prometheus
+        queries:
+          - name: "Request rate"
+            query: "sum(rate(http_server_request_duration_seconds_count{$$__tags}[5m]))"
+            labelDisplayName: "Request rate"
+          - name: "Error rate"
+            query: "sum(rate(http_server_request_duration_seconds_count{$$__tags,http_status_code=~\"5..\"}[5m]))"
+            labelDisplayName: "Error rate"
+          - name: "Duration 95th percentile"
+            query: "histogram_quantile(0.95, sum(rate(http_server_request_duration_seconds_bucket{$$__tags}[5m])) by (le))"
+            labelDisplayName: "Duration 95th"
+      nodeGraph:
+        enabled: true
+      traceQuery:
+        timeShiftEnabled: true
+        spanStartTimeShift: "-30m"
+        spanEndTimeShift: "30m"
+    secureJsonData: {}

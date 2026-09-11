@@ -1,0 +1,51 @@
+# ============================================================
+# CrimeKit Backend - Development Dockerfile
+# ============================================================
+
+FROM python:3.12
+
+WORKDIR /app
+
+# System deps for building native extensions + debug tools
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        gcc \
+        libffi-dev \
+        libjpeg62-turbo-dev \
+        zlib1g-dev \
+        git \
+        curl \
+        vim-tiny && \
+    rm -rf /var/lib/apt/lists/*
+
+# Install Python deps + development extras
+COPY requirements.txt .
+RUN --mount=type=cache,target=/root/.cache/pip \
+    pip install --no-warn-script-location \
+        -r requirements.txt && \
+    pip install --no-warn-script-location \
+        debugpy ipdb pytest-watch
+
+# Non-root user
+RUN groupadd --gid 1000 crimekit && \
+    useradd --uid 1000 --gid crimekit --create-home crimekit
+
+# Copy application source
+COPY . .
+
+RUN mkdir -p /app/backend/storage/evidence /app/storage/evidence /app/logs && \
+    chown -R crimekit:crimekit /app
+
+# Env
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PYTEST_WATCH=1
+
+EXPOSE 8000
+# debugpy default port
+EXPOSE 5678
+
+USER crimekit
+
+ENTRYPOINT ["python"]
+CMD ["-m", "uvicorn", "backend.app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]

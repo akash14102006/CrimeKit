@@ -1,0 +1,184 @@
+# ============================================================
+# CrimeKit - Docker Compose (Development Overrides)
+# ============================================================
+# Usage:
+#   docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d
+#   Or with dev tools:
+#   docker compose -f docker-compose.yml -f docker-compose.dev.yml --profile dev-tools up -d
+#
+# This file overrides defaults from docker-compose.yml for local
+# development: hot reload, debug logging, exposed ports, and
+# reduced resource limits.
+# ============================================================
+
+services:
+  # ==========================================================
+  # DATABASES - Development Overrides
+  # ==========================================================
+
+  postgres:
+    ports:
+      - "5432:5432"
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 1G
+        reservations:
+          cpus: "0.25"
+          memory: 256M
+
+  redis:
+    ports:
+      - "6379:6379"
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 256M
+        reservations:
+          cpus: "0.1"
+          memory: 64M
+
+  neo4j:
+    ports:
+      - "7474:7474"
+      - "7687:7687"
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 1G
+        reservations:
+          cpus: "0.25"
+          memory: 256M
+
+  # ==========================================================
+  # OBJECT STORAGE - Development Overrides
+  # ==========================================================
+
+  minio:
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 512M
+        reservations:
+          cpus: "0.1"
+          memory: 128M
+
+  # ==========================================================
+  # APPLICATION - Development Overrides
+  # ==========================================================
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.dev
+    environment:
+      APP_ENV: development
+      APP_DEBUG: "true"
+      APP_LOG_LEVEL: debug
+      EVIDENCE_STORAGE_DIR: /app/backend/storage/evidence
+    volumes:
+      - ./backend:/app
+      - backend_logs:/app/logs
+      - backend_evidence:/app/backend/storage/evidence
+    ports:
+      - "8000:8000"
+      - "5678:5678"
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 1G
+        reservations:
+          cpus: "0.25"
+          memory: 256M
+
+  # ==========================================================
+  # REVERSE PROXY - Development Overrides
+  # ==========================================================
+
+  nginx:
+    ports:
+      - "80:80"
+      - "443:443"
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 128M
+        reservations:
+          cpus: "0.1"
+          memory: 32M
+
+  # ==========================================================
+  # MONITORING - Development Overrides
+  # ==========================================================
+
+  prometheus:
+    profiles:
+      - monitoring
+    ports:
+      - "9090:9090"
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 256M
+        reservations:
+          cpus: "0.1"
+          memory: 64M
+
+  grafana:
+    profiles:
+      - monitoring
+    ports:
+      - "3000:3000"
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: admin
+      GF_USERS_ALLOW_SIGN_UP: "true"
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 256M
+        reservations:
+          cpus: "0.1"
+          memory: 64M
+
+  # ==========================================================
+  # DEV TOOLS - Enabled in Development
+  # ==========================================================
+
+  pgadmin:
+    profiles:
+      - dev-tools
+    ports:
+      - "5050:80"
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 256M
+        reservations:
+          cpus: "0.1"
+          memory: 64M
+
+  redis-commander:
+    profiles:
+      - dev-tools
+    ports:
+      - "6380:6381"
+    deploy:
+      resources:
+        limits:
+          cpus: "0.25"
+          memory: 128M
+        reservations:
+          cpus: "0.05"
+          memory: 32M

@@ -1,0 +1,38 @@
+{
+  "defaults": {
+    "project": 1,
+    "env": 1
+  },
+  "actives": {
+    "project": 1,
+    "env": 1
+  },
+  "projects": [
+    {
+      "idx": 1,
+      "id": "20246000000010171",
+      "name": "CodeMafiaweb3",
+      "domain": {
+        "id": "50034280078",
+        "name": "codemafiaweb3-60050836849.development"
+      },
+      "timezone": "Asia/Kolkata",
+      "env": [
+        {
+          "idx": 1,
+          "id": "60050836849",
+          "name": "Development",
+          "type": 3,
+          "env_status": "Active",
+          "project_details": {
+            "project_name": "CodeMafiaweb3",
+            "id": "20246000000010171",
+            "project_type": "Live"
+          },
+          "is_default": false,
+          "action_required": false
+        }
+      ]
+    }
+  ]
+}

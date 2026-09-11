@@ -1,0 +1,44 @@
+fastapi>=0.109.0
+setuptools<72
+uvicorn[standard]>=0.27.0
+SQLAlchemy==2.0.22
+alembic==1.11.1
+passlib[bcrypt]==1.7.4
+bcrypt>=4.0,<5
+pytest==7.4.0
+httpx>=0.28.0,<0.29
+python-jose[cryptography]==3.3.0
+python-multipart==0.0.6
+pytest-cov==4.0.0
+coverage==7.4.2
+Pillow>=10.0.1
+pypdf==3.14.0
+neo4j==5.28.0
+redis==5.0.1
+boto3>=1.34.0
+psycopg2-binary>=2.9.9
+email-validator==2.1.0
+# Descope Enterprise Auth
+descope>=2.11.0
+# OpenTelemetry (optional - graceful fallback if not installed)
+opentelemetry-api>=1.20.0
+opentelemetry-sdk>=1.20.0
+opentelemetry-exporter-otlp>=1.20.0
+opentelemetry-instrumentation-fastapi>=0.41b0
+opentelemetry-instrumentation-sqlalchemy>=0.41b0
+opentelemetry-instrumentation-redis>=0.41b0
+# opentelemetry-instrumentation-neo4j>=0.41b0 (not available on PyPI)
+# Distributed processing
+arq>=0.25.0
+# Enterprise search (optional)
+opensearch-py>=2.0.0
+# Enterprise storage
+botocore>=1.34.0
+# OCR engines — pytesseract is the installed real engine; PaddleOCR is used
+# automatically when present (preferred per pipeline design) but is not in the
+# base requirements because its CPU wheel is large and can break the image build.
+pytesseract>=0.3.10
+# Blockchain / Evidence Proof Fabric (optional — graceful fallback if not installed)
+web3>=6.15.0
+# Native Sleuth Kit bindings used by app.tsk_engine.
+pytsk3==20260715

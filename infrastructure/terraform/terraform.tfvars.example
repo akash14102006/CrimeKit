@@ -1,0 +1,17 @@
+# ==============================================================================
+# CrimeKit — Terraform Production Variables Example (AWS ap-south-1)
+# Copy to terraform.tfvars and supply real secure values during deployment.
+# ==============================================================================
+
+project           = "crimekit"
+env               = "prod"
+region            = "ap-south-1"
+
+# Database Configuration
+db_name           = "crimekit"
+db_username       = "crimekit_admin"
+db_password       = "REPLACE_WITH_STRONG_GENERATED_PASSWORD"
+db_instance_class = "db.t4g.medium"
+
+# Cache Configuration
+redis_node_type   = "cache.t4g.small"

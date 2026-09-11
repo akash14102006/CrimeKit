@@ -1,0 +1,203 @@
+# ============================================================
+# CrimeKit - Docker Compose (Production Overrides)
+# ============================================================
+# Usage:
+#   docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+#
+# This file overrides defaults from docker-compose.yml for
+# production deployments. All internal service ports are removed,
+# resource limits are increased, and logging is structured.
+# ============================================================
+
+services:
+  # ==========================================================
+  # DATABASES - Production Overrides
+  # ==========================================================
+
+  postgres:
+    # Remove host port mapping - internal only
+    ports: []
+    deploy:
+      resources:
+        limits:
+          cpus: "4.0"
+          memory: 4G
+        reservations:
+          cpus: "1.0"
+          memory: 1G
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  redis:
+    deploy:
+      resources:
+        limits:
+          cpus: "2.0"
+          memory: 2G
+        reservations:
+          cpus: "0.5"
+          memory: 256M
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  neo4j:
+    # Remove host port mappings - internal only
+    ports: []
+    deploy:
+      resources:
+        limits:
+          cpus: "4.0"
+          memory: 4G
+        reservations:
+          cpus: "1.0"
+          memory: 1G
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # ==========================================================
+  # OBJECT STORAGE - Production Overrides
+  # ==========================================================
+
+  minio:
+    # Remove host port mappings - internal only
+    ports: []
+    deploy:
+      resources:
+        limits:
+          cpus: "2.0"
+          memory: 2G
+        reservations:
+          cpus: "0.5"
+          memory: 512M
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  minio-init:
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # ==========================================================
+  # APPLICATION - Production Overrides
+  # ==========================================================
+
+  backend:
+    environment:
+      APP_ENV: production
+      APP_DEBUG: "false"
+      APP_LOG_LEVEL: warning
+      EVIDENCE_STORAGE_DIR: /app/backend/storage/evidence
+    deploy:
+      resources:
+        limits:
+          cpus: "4.0"
+          memory: 4G
+        reservations:
+          cpus: "1.0"
+          memory: 1G
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 5
+        window: 120s
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # ==========================================================
+  # REVERSE PROXY - Production Overrides
+  # ==========================================================
+
+  nginx:
+    volumes:
+      - ./infrastructure/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./infrastructure/nginx/sites:/etc/nginx/sites-enabled:ro
+      - ./infrastructure/nginx/conf.d:/etc/nginx/conf.d:ro
+      - ./infrastructure/nginx/ssl:/etc/nginx/ssl:ro
+      - nginx_logs:/var/log/nginx
+    deploy:
+      resources:
+        limits:
+          cpus: "2.0"
+          memory: 512M
+        reservations:
+          cpus: "0.25"
+          memory: 128M
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 5
+        window: 120s
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # ==========================================================
+  # MONITORING - Enabled by Default in Production
+  # ==========================================================
+
+  prometheus:
+    profiles: []
+    deploy:
+      resources:
+        limits:
+          cpus: "2.0"
+          memory: 1G
+        reservations:
+          cpus: "0.5"
+          memory: 256M
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  grafana:
+    profiles: []
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD}
+      GF_USERS_ALLOW_SIGN_UP: "false"
+      GF_SERVER_ROOT_URL: "https://grafana.${APP_DOMAIN:-localhost}"
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 1G
+        reservations:
+          cpus: "0.25"
+          memory: 256M
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # ==========================================================
+  # DEV TOOLS - Removed in Production
+  # ==========================================================
+
+  pgadmin:
+    profiles:
+      - disabled-in-prod
+
+  redis-commander:
+    profiles:
+      - disabled-in-prod

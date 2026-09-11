@@ -1,0 +1,15 @@
+# Load, Chaos & Integration Test Dependencies
+# Install: pip install -r tests/load/requirements.txt
+
+# Load testing
+# k6>=0.50.0          # (install separately: https://grafana.com/docs/k6/latest/set-up/install-k6/)
+locust>=2.20.0
+
+# Chaos testing
+pytest>=7.4.0
+requests>=2.31.0
+docker>=6.1.0
+
+# Integration testing
+httpx>=0.24.1
+pytest-asyncio>=0.21.0

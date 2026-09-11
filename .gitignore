@@ -1,0 +1,103 @@
+# ==============================================================================
+# CrimeKit — Git Ignore Configuration
+# ==============================================================================
+
+# OS and AppleDouble files
+.DS_Store
+Thumbs.db
+._*
+Desktop.ini
+
+# Python environments and bytecode
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+venv/
+env/
+.venv/
+venv.bak/
+pip-wheel-metadata/
+*.egg-info/
+dist/
+build/
+coverage.xml
+coverage/
+htmlcov/
+.pytest_cache/
+*.sqlite
+*.sqlite3
+*.db
+dev.db
+backend/dev.db
+ci.db
+backend/ci.db
+
+# Node.js and Frontend builds
+node_modules/
+frontend/node_modules/
+.next/
+frontend/.next/
+out/
+frontend/out/
+*.tsbuildinfo
+next-env.d.ts
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+package-lock.json
+yarn.lock
+
+# Large Binaries & Executables (Strictly exceeds or approaches GitHub limits)
+*.exe
+backend/minio/
+minio/
+*.mp4
+
+# Forensic evidence / local test storage
+backend/storage/
+backend/backend/storage/
+storage/
+evidence_store/
+
+# IDEs and Editors
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+.claude/
+
+# Security and Credentials (NEVER COMMIT)
+.env
+.env.*
+!.env.example
+!.env.production.example
+!.env.development.example
+*.pem
+*.key
+*.crt
+*.pfx
+secrets/
+
+# Docker overrides & backups
+docker-compose.override.yml
+/backups/
+
+# Logs and Reports
+*.log
+backend.log
+frontend.log
+frontend_err.log
+junit.xml
+report.xml
+trivy-report.json
+trivy-results.sarif
+bandit-report.json
+safety-report.json
+pip-audit-report.json
+
+# Graphify cache outputs
+graphify-out/

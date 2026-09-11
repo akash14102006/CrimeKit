@@ -1,0 +1,17 @@
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+.coverage
+coverage.xml
+report.xml
+*.db
+*.log
+*.pdf
+*.tmp
+._*
+
+# Local test and scratch artifacts
+tests/
+test_evidence/
+*.exe

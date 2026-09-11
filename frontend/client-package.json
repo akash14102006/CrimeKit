@@ -1,0 +1,8 @@
+{
+  "name": "crimekit-frontend",
+  "version": "1.0.0",
+  "client": {
+    "type": "basic"
+  },
+  "homepage": "index.html"
+}

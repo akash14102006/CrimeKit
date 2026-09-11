@@ -1,0 +1,12 @@
+import { create } from "zustand";
+import type { SettingsTab } from "../types/settings";
+
+interface SettingsState {
+  activeTab: SettingsTab;
+  setActiveTab: (tab: SettingsTab) => void;
+}
+
+export const useSettingsStore = create<SettingsState>((set) => ({
+  activeTab: "profile",
+  setActiveTab: (tab) => set({ activeTab: tab }),
+}));

@@ -1,0 +1,17 @@
+{{- if .Values.podDisruptionBudget.enabled }}
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: {{ include "crimekit.fullname" . }}-backend
+  labels:
+    {{- include "crimekit.labels" . | nindent 4 }}
+    app.kubernetes.io/component: backend
+spec:
+  {{- if .Values.podDisruptionBudget.minAvailable }}
+  minAvailable: {{ .Values.podDisruptionBudget.minAvailable }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "crimekit.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: backend
+{{- end }}

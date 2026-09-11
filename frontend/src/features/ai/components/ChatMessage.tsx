@@ -1,0 +1,150 @@
+"use client";
+
+import { memo, useCallback } from "react";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Copy, Check } from "lucide-react";
+import { useState } from "react";
+import type { AIMessage, AICitation } from "../store/aiStore";
+
+function formatTimestamp(ts: number): string {
+  return new Date(ts).toLocaleTimeString([], {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
+function CitationBadge({ citation }: { citation: AICitation }) {
+  const iconMap: Record<string, string> = {
+    evidence: "📄",
+    timeline: "📅",
+    kg: "🔗",
+    processing: "⚙️",
+    report: "📋",
+  };
+
+  return (
+    <Badge
+      variant="outline"
+      className="text-[10px] gap-1 cursor-pointer hover:bg-muted/50"
+      title={citation.source_id ? `Source: ${citation.source_id}` : citation.label}
+    >
+      <span>{iconMap[citation.type] ?? "📎"}</span>
+      {citation.label}
+      {citation.confidence != null && (
+        <span className="text-muted-foreground ml-1">
+          {(citation.confidence * 100).toFixed(0)}%
+        </span>
+      )}
+    </Badge>
+  );
+}
+
+function MessageContent({ content }: { content: string }) {
+  const parts = content.split(/(```[\s\S]*?```)/g);
+
+  return (
+    <div className="space-y-2">
+      {parts.map((part, i) => {
+        if (part.startsWith("```")) {
+          const lines = part.split("\n");
+          const lang = lines[0]?.replace("```", "").trim();
+          const code = lines.slice(1, -1).join("\n");
+          return (
+            <pre
+              key={i}
+              className="bg-muted/50 rounded-md p-3 text-xs overflow-x-auto"
+            >
+              {lang && (
+                <div className="text-[10px] text-muted-foreground mb-1">
+                  {lang}
+                </div>
+              )}
+              <code>{code}</code>
+            </pre>
+          );
+        }
+        return (
+          <div key={i} className="whitespace-pre-wrap text-sm leading-relaxed">
+            {part}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+export const ChatMessage = memo(function ChatMessage({
+  message,
+  onCopy,
+}: {
+  message: AIMessage;
+  onCopy?: (text: string) => void;
+}) {
+  const [copied, setCopied] = useState(false);
+  const isUser = message.role === "user";
+
+  const handleCopy = useCallback(() => {
+    navigator.clipboard.writeText(message.content);
+    setCopied(true);
+    onCopy?.(message.content);
+    setTimeout(() => setCopied(false), 2000);
+  }, [message.content, onCopy]);
+
+  return (
+    <div className={`flex gap-3 ${isUser ? "justify-end" : "justify-start"}`}>
+      <div
+        className={`max-w-[85%] rounded-lg px-4 py-3 ${
+          isUser
+            ? "bg-primary text-primary-foreground"
+            : "bg-muted/50 border"
+        }`}
+      >
+        <MessageContent content={message.content} />
+
+        {message.citations && message.citations.length > 0 && (
+          <div className="flex flex-wrap gap-1 mt-2 pt-2 border-t border-border/50">
+            {message.citations.map((c) => (
+              <CitationBadge key={c.id} citation={c} />
+            ))}
+          </div>
+        )}
+
+        {message.confidence != null && (
+          <div className="mt-2 pt-2 border-t border-border/50">
+            <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
+              <span>Confidence:</span>
+              <div className="h-1 flex-1 bg-muted rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-primary rounded-full"
+                  style={{ width: `${message.confidence * 100}%` }}
+                />
+              </div>
+              <span>{(message.confidence * 100).toFixed(0)}%</span>
+            </div>
+          </div>
+        )}
+
+        <div className="flex items-center justify-between mt-2 pt-1">
+          <span className="text-[10px] text-muted-foreground opacity-60">
+            {formatTimestamp(message.timestamp)}
+          </span>
+          {!isUser && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-5 w-5 p-0 opacity-60 hover:opacity-100"
+              onClick={handleCopy}
+            >
+              {copied ? (
+                <Check className="h-3 w-3" />
+              ) : (
+                <Copy className="h-3 w-3" />
+              )}
+            </Button>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+});
