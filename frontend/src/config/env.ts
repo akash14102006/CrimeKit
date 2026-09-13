@@ -21,7 +21,8 @@ export const env = {
       : window.location.origin),
 
   /** Auth provider project id (optional; fallback sentinel only). */
-  descopeProjectId: process.env.NEXT_PUBLIC_DESCOPE_PROJECT_ID,
+  descopeProjectId:
+    process.env.NEXT_PUBLIC_DESCOPE_PROJECT_ID || "P3FF4lAVyrTtQeqlbuAeSdoCbrIX",
 
   /** Global request timeout in milliseconds. */
   requestTimeoutMs: Number(process.env.NEXT_PUBLIC_REQUEST_TIMEOUT_MS ?? 15_000),

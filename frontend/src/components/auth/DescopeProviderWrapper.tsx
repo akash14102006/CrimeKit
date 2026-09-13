@@ -10,11 +10,7 @@ export function DescopeProviderWrapper({
 }: {
   children: React.ReactNode;
 }) {
-  const projectId = env.descopeProjectId;
-
-  if (!projectId) {
-    return <>{children}</>;
-  }
+  const projectId = env.descopeProjectId || "P3FF4lAVyrTtQeqlbuAeSdoCbrIX";
 
   return (
     <DescopeErrorBoundary fallback={<>{children}</>}>

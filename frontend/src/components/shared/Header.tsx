@@ -33,7 +33,7 @@ export function Header() {
 
   const handleLogout = () => {
     clearSession();
-    descopeLogout();
+    try { descopeLogout(); } catch {}
     router.push("/login");
   };
 

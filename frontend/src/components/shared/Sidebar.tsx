@@ -19,7 +19,7 @@ export function Sidebar() {
 
   const handleLogout = () => {
     clearSession();
-    descopeLogout();
+    try { descopeLogout(); } catch {}
     window.location.href = "/login";
   };
 
