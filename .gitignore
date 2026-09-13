@@ -101,3 +101,11 @@ pip-audit-report.json
 
 # Graphify cache outputs
 graphify-out/
+
+# Catalyst & Scratch backup artifacts
+.catalystrc*.backup
+frontend/.catalyst/
+frontend/cli-config.json
+frontend/frontend@*
+frontend/next
+ssh

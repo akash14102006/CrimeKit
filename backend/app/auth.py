@@ -63,12 +63,15 @@ def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(
     3. Extract user identity from the validated payload.
     4. Auto-provision Descope users in the local DB on first login.
     """
-    payload = validate_descope_jwt(token)
-
-    if not payload:
-        # Try local JWT decode as final fallback
+    descope_payload = validate_descope_jwt(token)
+    if descope_payload:
+        payload = descope_payload
+        is_descope_auth = True
+    else:
+        # Fallback to local JWT decode
         try:
             payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+            is_descope_auth = False
         except JWTError:
             raise HTTPException(status_code=401, detail='Invalid or expired token')
 
@@ -89,11 +92,16 @@ def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(
     if email:
         user = db.query(models.User).filter(models.User.email == email).first()
     if not user and user_id:
-        user = db.query(models.User).filter(models.User.id == user_id).first()
+        if "@" in user_id:
+            user = db.query(models.User).filter(models.User.email == user_id).first()
+        if not user:
+            user = db.query(models.User).filter(
+                (models.User.id == user_id) | (models.User.email == f"{user_id}@descope.local")
+            ).first()
 
-    if not user and email:
-        if is_auth_demo_mode():
-            # Auto-provision Descope / OAuth authenticated user in demo mode
+    if not user and (email or user_id):
+        # Auto-provision if authenticated via Descope IDP or in demo mode
+        if is_descope_auth or is_auth_demo_mode():
             user = _sync_descope_user(db, payload)
         else:
             raise HTTPException(status_code=401, detail='User not found')
@@ -107,37 +115,50 @@ def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(
 def _sync_descope_user(db: Session, payload: dict) -> models.User:
     """
     Create or update a local user record from Descope JWT claims.
-    This is the user synchronization layer (Phase 4).
+    Enforces least-privilege default role ('viewer' in production).
+    Preserves existing user roles on repeat logins.
     """
-    email = payload.get('email', '')
     user_id = payload.get('sub') or payload.get('userId', '')
+    email = payload.get('email', '')
+    if not email and user_id and "@" in user_id:
+        email = user_id
+    effective_email = email or (f"{user_id}@descope.local" if user_id else None)
     descope_roles = payload.get('roles', [])
 
     # Check if user already exists
     user = None
-    if email:
-        user = db.query(models.User).filter(models.User.email == email).first()
+    if effective_email:
+        user = db.query(models.User).filter(models.User.email == effective_email).first()
     if not user and user_id:
-        user = db.query(models.User).filter(models.User.id == user_id).first()
+        user = db.query(models.User).filter(
+            (models.User.id == user_id) | (models.User.email == f"{user_id}@descope.local")
+        ).first()
 
     if user:
-        # Update existing user
-        user.email = email or user.email
-        db.commit()
-        db.refresh(user)
+        # Update existing user identity if needed, while preserving local roles
+        if email and user.email != email:
+            user.email = email
+            db.commit()
+            db.refresh(user)
+        return user
     else:
-        # Create new user directly (without crud.create_user's default investigator role)
+        # Create new user record
         user = models.User(
-            email=email or f"{user_id}@descope.local",
+            email=effective_email or f"{user_id}@descope.local",
             password_hash="",
+            is_active=True,
         )
         db.add(user)
 
-        # Map Descope roles to local roles
+        # Map Descope roles to local roles if provided in token
         role_map = {
             "admin": "admin",
             "investigator": "investigator",
+            "analyst": "analyst",
             "viewer": "viewer",
+            "evidence_officer": "evidence_officer",
+            "compliance_officer": "compliance_officer",
+            "auditor": "auditor",
         }
         assigned_role = False
         for descope_role in descope_roles:
@@ -149,13 +170,17 @@ def _sync_descope_user(db: Session, payload: dict) -> models.User:
                 user.roles.append(local_role)
                 assigned_role = True
 
-        # Ensure at least investigator role if no Descope roles mapped
+        # Enforce least-privilege: default role is 'viewer' in production, 'investigator' in demo mode
         if not assigned_role:
+            default_role_name = "investigator" if is_auth_demo_mode() else "viewer"
             default_role = db.query(models.Role).filter(
-                models.Role.name == "investigator"
+                models.Role.name == default_role_name
             ).first()
-            if default_role:
-                user.roles.append(default_role)
+            if not default_role:
+                default_role = models.Role(name=default_role_name, description=f"Default {default_role_name} role")
+                db.add(default_role)
+                db.flush()
+            user.roles.append(default_role)
 
         db.commit()
         db.refresh(user)

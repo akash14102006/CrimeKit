@@ -128,6 +128,7 @@ def upload_evidence(case_id: str | None = Form(None), file: UploadFile = File(..
 
 
 @router.get('/')
+@router.get('', include_in_schema=False)
 def get_all_evidence(
     db: Session = Depends(get_db),
     current_user: models.User = Depends(get_current_user),

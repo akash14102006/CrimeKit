@@ -41,8 +41,8 @@ def revoke_refresh_token(db: Session, rt: models.RefreshToken):
 
 
 # Case CRUD
-def create_case(db: Session, title: str, description: str | None, created_by: str | None, priority: str | None = "medium"):
-    c = models.Case(title=title, description=description, created_by=created_by, priority=priority)
+def create_case(db: Session, title: str, description: str | None, created_by: str | None, priority: str | None = "medium", status: str | None = "active"):
+    c = models.Case(title=title, description=description, created_by=created_by, priority=priority, status=status or "active")
     db.add(c)
     db.commit()
     db.refresh(c)

@@ -91,3 +91,25 @@ def compute_custody_commitment(
         "metadata": metadata or {},
     })
     return _commitment_hash("CUSTODY", payload, protocol_version)
+
+
+def _abi_encode_bytes32(val: str | bytes) -> bytes:
+    """Encode string hex or bytes to 32-byte representation."""
+    if isinstance(val, str):
+        hex_val = val[2:] if val.startswith("0x") else val
+        try:
+            return bytes.fromhex(hex_val.ljust(64, "0")[:64])
+        except ValueError:
+            return hashlib.sha256(val.encode("utf-8")).digest()
+    return val.rjust(32, b"\x00")[:32]
+
+
+def _abi_encode_string(val: str) -> bytes:
+    """Encode utf-8 string."""
+    return val.encode("utf-8")
+
+
+def _abi_encode_uint256(val: int) -> bytes:
+    """Encode integer to uint256 32-byte big-endian."""
+    return val.to_bytes(32, byteorder="big")
+

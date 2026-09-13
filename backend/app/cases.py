@@ -17,12 +17,14 @@ def get_db():
 
 
 @router.post('/', response_model=schemas.CaseOut)
+@router.post('', response_model=schemas.CaseOut, include_in_schema=False)
 def create_case(payload: schemas.CaseCreate, db: Session = Depends(get_db), current_user: models.User = Depends(role_required(['user', 'investigator', 'admin']))):
-    c = crud.create_case(db, payload.title, payload.description, current_user.id, payload.priority)
+    c = crud.create_case(db, payload.title, payload.description, current_user.id, payload.priority, payload.status)
     return c
 
 
 @router.get('/', response_model=schemas.CaseListResponse)
+@router.get('', response_model=schemas.CaseListResponse, include_in_schema=False)
 def list_cases(
     db: Session = Depends(get_db),
     _: models.User = Depends(role_required(['user', 'investigator', 'admin'])),

@@ -1,18 +1,27 @@
+from enum import Enum
 from pydantic import BaseModel
 from typing import Optional, List
 from datetime import datetime
 
 
+class CaseStatus(str, Enum):
+    ACTIVE = "active"
+    CLOSED = "closed"
+    ARCHIVED = "archived"
+    PENDING = "pending"
+
+
 class CaseCreate(BaseModel):
     title: str
     description: Optional[str] = None
+    status: Optional[CaseStatus] = CaseStatus.ACTIVE
     priority: Optional[str] = "medium"
 
 
 class CaseUpdate(BaseModel):
     title: Optional[str] = None
     description: Optional[str] = None
-    status: Optional[str] = None
+    status: Optional[CaseStatus] = None
     priority: Optional[str] = None
     assigned_to: Optional[str] = None
 
@@ -21,7 +30,7 @@ class CaseOut(BaseModel):
     id: str
     title: str
     description: Optional[str]
-    status: Optional[str]
+    status: Optional[CaseStatus]
     priority: Optional[str]
     assigned_to: Optional[str]
     created_by: Optional[str]

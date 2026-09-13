@@ -38,7 +38,8 @@ botocore>=1.34.0
 # automatically when present (preferred per pipeline design) but is not in the
 # base requirements because its CPU wheel is large and can break the image build.
 pytesseract>=0.3.10
-# Blockchain / Evidence Proof Fabric (optional — graceful fallback if not installed)
+# Blockchain / Evidence Proof Fabric settings & web3
+pydantic-settings>=2.0.0
 web3>=6.15.0
 # Native Sleuth Kit bindings used by app.tsk_engine.
 pytsk3==20260715

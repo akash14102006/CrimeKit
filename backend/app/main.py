@@ -180,8 +180,8 @@ app.include_router(distributed_router)
 try:
     from .blockchain.routes import router as blockchain_router
     app.include_router(blockchain_router)
-except ImportError:
-    pass  # web3.py not installed — blockchain features disabled
+except ImportError as exc:
+    logger.warning("Blockchain router disabled due to missing dependency: %s", exc)
 
 # TSK Forensic Intelligence Engine. This is a required application surface;
 # dependency failures must stop startup instead of silently removing /tsk/*.

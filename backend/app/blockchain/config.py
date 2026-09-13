@@ -7,7 +7,13 @@ No PII is ever stored on-chain.
 
 from __future__ import annotations
 
-from pydantic_settings import BaseSettings
+try:
+    from pydantic_settings import BaseSettings
+except ImportError:
+    try:
+        from pydantic import BaseSettings
+    except ImportError:
+        from pydantic.v1 import BaseSettings  # type: ignore[import-not-found]
 from pydantic import Field
 
 

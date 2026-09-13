@@ -158,3 +158,32 @@ def compute_root(leaves: List[str]) -> str:
     """Convenience: build a tree and return the root."""
     tree = MerkleTree(leaves)
     return tree.root
+
+
+class MerkleProof:
+    """Encapsulates a Merkle inclusion proof for a leaf."""
+
+    def __init__(self, leaf: str, leaf_index: int, siblings: List[str], root: str):
+        self.leaf = leaf
+        self.leaf_index = leaf_index
+        self.siblings = siblings
+        self.root = root
+
+
+def build_merkle_tree(leaves: List[str]) -> MerkleTree:
+    """Construct and return a MerkleTree from leaves."""
+    return MerkleTree(leaves)
+
+
+def generate_proof(tree: MerkleTree, leaf_index: int) -> MerkleProof:
+    """Generate a MerkleProof for a leaf index from a MerkleTree."""
+    siblings = tree.get_proof(leaf_index)
+    leaf = tree.leaves[leaf_index] if 0 <= leaf_index < len(tree.leaves) else ""
+    return MerkleProof(leaf=leaf, leaf_index=leaf_index, siblings=siblings, root=tree.root)
+
+
+def verify_proof(leaf: str, proof: List[str] | MerkleProof, root: str, leaf_index: int = 0) -> bool:
+    """Verify a Merkle inclusion proof against an expected root."""
+    if isinstance(proof, MerkleProof):
+        return MerkleTree.verify_proof(proof.leaf, proof.siblings, proof.root, proof.leaf_index)
+    return MerkleTree.verify_proof(leaf, proof, root, leaf_index)
