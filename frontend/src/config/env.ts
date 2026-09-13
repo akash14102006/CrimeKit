@@ -9,9 +9,12 @@ function hostname(): string {
 }
 
 export const env = {
-  /** Backend base URL. Falls back to the current host on port 8002. */
+  /** Backend base URL. Production uses the public HTTPS API; local development uses port 8002. */
   apiBaseUrl:
-    process.env.NEXT_PUBLIC_API_URL ?? `http://${hostname()}:8002`,
+    process.env.NEXT_PUBLIC_API_URL ??
+    (process.env.NODE_ENV === "production"
+      ? "https://152-67-28-35.sslip.io"
+      : `http://${hostname()}:8002`),
 
   /** Public app URL (used for share links and canonical metadata). */
   appUrl:

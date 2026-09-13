@@ -1,6 +1,7 @@
 import { api } from "@/lib/api-client";
+import { env } from "@/config/env";
 
-const API = process.env.NEXT_PUBLIC_API_URL || `http://${typeof window !== 'undefined' ? window.location.hostname : 'localhost'}:8002`;
+const API = env.apiBaseUrl;
 
 export interface AnchorRecord {
   proof_id: string;

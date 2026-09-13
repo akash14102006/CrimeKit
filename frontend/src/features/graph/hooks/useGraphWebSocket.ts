@@ -47,7 +47,7 @@ export function useGraphWebSocket(caseId?: string | null) {
 
   const buildWsUrl = useCallback(
     (token: string) => {
-      const base = env.apiBaseUrl || "http://localhost:8002";
+      const base = env.apiBaseUrl;
       const protocol = base.startsWith("https") ? "wss" : "ws";
       const host = base.replace(/^https?:\/\//, "");
       return `${protocol}://${host}/ws/case/${caseId}?token=${token}`;

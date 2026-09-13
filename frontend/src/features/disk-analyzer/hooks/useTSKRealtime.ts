@@ -29,7 +29,7 @@ export function useTSKRealtime(caseId: string | null, evidenceId: string) {
     const token = useAuthStore.getState().sessionToken;
     if (!caseId || !evidenceId || !token) return;
 
-    const base = env.apiBaseUrl || "http://localhost:8002";
+    const base = env.apiBaseUrl;
     const protocol = base.startsWith("https") ? "wss" : "ws";
     const host = base.replace(/^https?:\/\//, "");
     const socket = new WebSocket(`${protocol}://${host}/ws/case/${caseId}?token=${token}`);

@@ -12,16 +12,7 @@ interface RetriableConfig extends InternalAxiosRequestConfig {
   _retry?: boolean;
 }
 
-const getBaseUrl = () => {
-  if (process.env.NEXT_PUBLIC_API_URL) {
-    return process.env.NEXT_PUBLIC_API_URL;
-  }
-  if (typeof window !== "undefined" && window.location?.hostname) {
-    const host = window.location.hostname === "localhost" ? "127.0.0.1" : window.location.hostname;
-    return `http://${host}:8002`;
-  }
-  return "http://127.0.0.1:8002";
-};
+const getBaseUrl = () => env.apiBaseUrl;
 
 export const apiClient: AxiosInstance = axios.create({
   baseURL: getBaseUrl(),
