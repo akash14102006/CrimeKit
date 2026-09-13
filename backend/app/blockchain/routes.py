@@ -71,7 +71,7 @@ def _get_adapter() -> EthereumAnchorProvider | None:
 @router.post("/anchor/evidence/{evidence_id}", response_model=AnchorResponse)
 def anchor_evidence(
     evidence_id: str,
-    body: AnchorEvidenceRequest,
+    body: Optional[AnchorEvidenceRequest] = None,
     db: Session = Depends(get_db),
     current_user: models.User = Depends(role_required(["admin", "investigator", "evidence_officer"])),
 ):
@@ -83,6 +83,10 @@ def anchor_evidence(
     evidence = db.query(models.Evidence).filter(models.Evidence.id == evidence_id).first()
     if not evidence:
         raise HTTPException(status_code=404, detail="Evidence not found")
+
+    if body is None:
+        body = AnchorEvidenceRequest(evidence_id=evidence_id, case_id=evidence.case_id)
+
 
     case_id = body.case_id
     case_commitment = hashlib.sha256(case_id.encode()).hexdigest() if case_id else "0" * 64

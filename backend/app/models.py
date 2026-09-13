@@ -202,3 +202,18 @@ class UploadChunk(Base):
     error_message = Column(Text, nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     uploaded_at = Column(DateTime(timezone=True), nullable=True)
+
+
+# Re-export Blockchain models if available
+try:
+    from .blockchain.models import (
+        BlockchainAnchor,
+        EvidenceCommitment,
+        MerkleBatch,
+        ArtifactCommitment,
+        VerificationRequest,
+        CustodyCommitment,
+    )
+except ImportError:
+    pass
+

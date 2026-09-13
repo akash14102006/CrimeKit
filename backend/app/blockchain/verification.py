@@ -94,7 +94,7 @@ def verify_full_report(
 
 def verify_evidence(db: Any, evidence_id: str):
     """Verify evidence integrity from DB models and commitments."""
-    from ... import models
+    from .. import models
     from .schemas import VerificationReport
     from fastapi import HTTPException
 

@@ -30,7 +30,7 @@ class CaseOut(BaseModel):
     id: str
     title: str
     description: Optional[str]
-    status: Optional[CaseStatus]
+    status: Optional[str] = "active"
     priority: Optional[str]
     assigned_to: Optional[str]
     created_by: Optional[str]
