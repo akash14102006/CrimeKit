@@ -58,7 +58,7 @@ minio/
 # Forensic evidence / local test storage
 backend/storage/
 backend/backend/storage/
-storage/
+!/backend/app/storage/
 evidence_store/
 
 # IDEs and Editors

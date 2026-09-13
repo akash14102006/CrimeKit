@@ -40,7 +40,7 @@ RUN --mount=type=cache,target=/root/.cache/pip \
     sh configure --prefix=/install --disable-nls --disable-shared-libs --disable-dependency-tracking && \
     make -j$(nproc) && \
     make install && \
-    PYTHONPATH=/install/lib/python3.12/site-packages python3 setup.py install --prefix=/install && \
+    python3 -m pip install --no-deps --prefix=/install . && \
     cd / && rm -rf /tmp/ewf_src
 
 # Copy application source
