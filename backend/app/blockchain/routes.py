@@ -362,11 +362,13 @@ def verify_evidence_endpoint(
 
     req = models.VerificationRequest(
         evidence_id=evidence_id,
-        requested_by=current_user.id,
-        verification_type="full",
-        result="pass" if report.overall_result else "fail",
+        requested_by=current_user.id if current_user else None,
+        evidence_hash_match=report.evidence_hash_match,
+        commitment_valid=report.commitment_valid,
+        merkle_proof_valid=report.merkle_proof_valid,
+        blockchain_confirmed=report.blockchain_confirmed,
+        overall_result=report.overall_result,
         details=report.model_dump(),
-        verified_at=datetime.now(timezone.utc),
     )
     db.add(req)
     db.commit()
@@ -385,11 +387,13 @@ def verify_proof_bundle_endpoint(
 
     req = models.VerificationRequest(
         evidence_id=body.proof_bundle.evidence_id,
-        requested_by=current_user.id,
-        verification_type="proof_bundle",
-        result="pass" if report.overall_result else "fail",
+        requested_by=current_user.id if current_user else None,
+        evidence_hash_match=report.evidence_hash_match,
+        commitment_valid=report.commitment_valid,
+        merkle_proof_valid=report.merkle_proof_valid,
+        blockchain_confirmed=report.blockchain_confirmed,
+        overall_result=report.overall_result,
         details=report.model_dump(),
-        verified_at=datetime.now(timezone.utc),
     )
     db.add(req)
     db.commit()
