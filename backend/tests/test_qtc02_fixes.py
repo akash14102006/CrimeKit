@@ -254,3 +254,18 @@ def test_p3_002_case_status_invalid_value_rejected(client, setup_database):
     # Verify error location is status field
     errors = resp.json().get("detail", [])
     assert any("status" in str(err.get("loc", [])) for err in errors)
+
+
+def test_p2_002_production_rejects_fallback_decode(monkeypatch):
+    """Verify that in production mode, validate_descope_jwt does NOT fall back to HS256 decode."""
+    from app.security.descope_auth import validate_descope_jwt
+
+    monkeypatch.setenv("APP_ENV", "production")
+    monkeypatch.setenv("AUTH_DEMO_MODE", "false")
+    monkeypatch.delenv("TESTING", raising=False)
+
+    token = create_access_token({"sub": "attacker", "email": "attacker@evil.com", "roles": ["admin"]})
+    # Since this is an HS256 token, Descope SDK validation will fail, and production mode prevents fallback decode
+    result = validate_descope_jwt(token)
+    assert result is None, "In production mode, validate_descope_jwt must reject non-Descope tokens without falling back"
+

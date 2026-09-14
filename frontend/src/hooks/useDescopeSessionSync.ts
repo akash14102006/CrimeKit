@@ -3,6 +3,7 @@
 import { useEffect, useRef } from "react";
 import { useSession, useUser } from "@descope/react-sdk";
 import { useAuthStore } from "@/store/authStore";
+import { env } from "@/config/env";
 
 /**
  * useDescopeSessionSync — bridges Descope's AuthProvider state into the Zustand auth store.
@@ -29,10 +30,11 @@ export function useDescopeSessionSync() {
 
       if (descopeUser) {
         const descopeRoles = (descopeUser as Record<string, unknown>).roles;
+        const defaultRole = env.authDemoMode ? "investigator" : "viewer";
         const roles: string[] = Array.isArray(descopeRoles) && descopeRoles.length > 0
           ? descopeRoles.map((r: unknown) => String(r).toLowerCase())
-          : ["investigator"];
-        const primaryRole = roles[0] ?? "investigator";
+          : [defaultRole];
+        const primaryRole = roles[0] ?? defaultRole;
         setUser({
           id: descopeUser.userId ?? descopeUser.loginIds?.[0] ?? "unknown",
           email: descopeUser.email ?? descopeUser.phone ?? "",

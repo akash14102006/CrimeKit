@@ -76,12 +76,16 @@ export function LoginForm() {
       // Extract user info from the JWT payload
       try {
         const payload = JSON.parse(atob(sessionJwt.split(".")[1]));
-        const roles: string[] = payload.roles || ["investigator"];
+        const defaultRole = env.authDemoMode ? "investigator" : "viewer";
+        const roles: string[] =
+          Array.isArray(payload.roles) && payload.roles.length > 0
+            ? payload.roles
+            : [defaultRole];
         setUser({
           id: payload.sub || "unknown",
           email: payload.email || "",
           name: payload.name || payload.email?.split("@")[0] || "Investigator",
-          role: (roles[0] || "investigator") as
+          role: (roles[0] || defaultRole) as
             | "admin"
             | "investigator"
             | "analyst"
@@ -119,21 +123,24 @@ export function LoginForm() {
   const handleError = useCallback((event: CustomEvent) => {
     console.error("[CrimeKit] Identity provider error:", event);
     const detail = event?.detail;
-    const errText =
+    const errText = (
       typeof detail === "string"
         ? detail
-        : detail?.error || detail?.errorMessage || detail?.message || "";
+        : detail?.error || detail?.errorMessage || detail?.message || ""
+    ).toLowerCase();
 
-    // Sanitize error: never expose internal [E062108] or raw technical errors
+    // Sanitize error: never expose internal [E062108] or raw technical errors to users
     if (
-      typeof errText === "string" &&
-      (errText.includes("E062108") ||
-        errText.toLowerCase().includes("user not found") ||
-        errText.toLowerCase().includes("unauthorized login attempt"))
+      errText.includes("e062108") ||
+      errText.includes("user not found") ||
+      errText.includes("does not exist") ||
+      errText.includes("unauthorized login attempt")
     ) {
       setError(
-        "Account not found or not yet authorized. Please contact your system administrator.",
+        "We couldn't complete your sign-in. Please ensure you are using an authorized institutional account or contact your system administrator.",
       );
+    } else if (errText.includes("popup") || errText.includes("cancelled") || errText.includes("closed")) {
+      setError("Sign-in was cancelled or the window was closed. Please try again.");
     } else {
       setError(
         "Authentication service encountered an issue. Please try again or contact support.",
@@ -171,7 +178,7 @@ export function LoginForm() {
         )}
 
         <DescopeFlow
-          flowId={env.authDemoMode ? "sign-up-or-in" : "sign-in"}
+          flowId={env.descopeFlowId}
           onSuccess={handleSuccess}
           onError={handleError}
           theme="dark"

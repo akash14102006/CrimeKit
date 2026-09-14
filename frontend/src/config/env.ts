@@ -27,6 +27,10 @@ export const env = {
   descopeProjectId:
     process.env.NEXT_PUBLIC_DESCOPE_PROJECT_ID || "P3FF4lAVyrTtQeqlbuAeSdoCbrIX",
 
+  /** Active Descope flow id for authentication ("sign-up-or-in" handles both existing and new users). */
+  descopeFlowId:
+    process.env.NEXT_PUBLIC_DESCOPE_FLOW_ID || "sign-up-or-in",
+
   /** Global request timeout in milliseconds. */
   requestTimeoutMs: Number(process.env.NEXT_PUBLIC_REQUEST_TIMEOUT_MS ?? 15_000),
 

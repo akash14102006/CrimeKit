@@ -43,6 +43,16 @@ def _get_descope_client():
         return None
 
 
+def _is_dev_or_test() -> bool:
+    """Return True if local development or testing mode allows local JWT decoding."""
+    if os.getenv("APP_ENV", "").lower() == "production":
+        return False
+    if os.getenv("TESTING") == "1":
+        return True
+    demo = os.getenv("AUTH_DEMO_MODE", "true").strip().lower()
+    return demo in ("true", "1", "yes", "on")
+
+
 def validate_descope_jwt(token: str) -> Optional[Dict[str, Any]]:
     """
     Validate a Descope session JWT using the official SDK.
@@ -58,9 +68,11 @@ def validate_descope_jwt(token: str) -> Optional[Dict[str, Any]]:
     """
     client = _get_descope_client()
     if client is None:
-        # Fallback: decode without validation (dev mode only)
-        logger.debug("Descope client unavailable — using fallback JWT decode")
-        return _fallback_decode(token)
+        if _is_dev_or_test():
+            logger.debug("Descope client unavailable — using fallback JWT decode for dev/test")
+            return _fallback_decode(token)
+        logger.error("Descope client unavailable in production — rejecting token")
+        return None
 
     try:
         # Descope SDK validates the session JWT
@@ -84,7 +96,9 @@ def validate_descope_jwt(token: str) -> Optional[Dict[str, Any]]:
                 return None
     except Exception as e:
         logger.warning(f"Descope SDK validation failed: {e}")
-        return _fallback_decode(token)
+        if _is_dev_or_test():
+            return _fallback_decode(token)
+        return None
 
 
 def _fallback_decode(token: str) -> Optional[Dict[str, Any]]:
