@@ -65,7 +65,10 @@ def clean_db():
         ("compliance_officer", "Compliance and audit access"),
         ("auditor",            "Audit log read access"),
         ("user",               "Basic authenticated user"),
+        ("demo_evaluator",     "Hackathon evaluator demonstration access"),
+        ("jury_evaluator",     "Hackathon Jury Evaluator with full functional access"),
     ]:
+
         if not db.query(models.Role).filter(models.Role.name == role_name).first():
             db.add(models.Role(name=role_name, description=role_desc))
     db.commit()

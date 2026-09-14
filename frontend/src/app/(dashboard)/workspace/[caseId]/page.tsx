@@ -14,7 +14,8 @@ export default async function WorkspacePage({ params }: { params: Promise<{ case
   const resolvedParams = await params;
 
   return (
-    <AuthGuard allowedRoles={["admin", "investigator", "analyst", "viewer"]}>
+    <AuthGuard allowedRoles={["admin", "investigator", "analyst", "viewer", "demo_evaluator", "jury_evaluator"]}>
+
       <WorkspaceLayout caseId={resolvedParams.caseId} />
     </AuthGuard>
   );

@@ -35,6 +35,13 @@ export const env = {
   requestTimeoutMs: Number(process.env.NEXT_PUBLIC_REQUEST_TIMEOUT_MS ?? 15_000),
 
   isProduction: process.env.NODE_ENV === "production",
+  isDevelopment: process.env.NODE_ENV !== "production",
+
+  /** Whether hackathon demo/evaluator mode is active (defaults to true for prototype evaluation). */
+  demoMode:
+    process.env.NEXT_PUBLIC_DEMO_MODE !== undefined
+      ? process.env.NEXT_PUBLIC_DEMO_MODE === "true"
+      : (process.env.NEXT_PUBLIC_AUTH_DEMO_MODE !== "false"),
 
   /** Whether demo/development authentication mode is active (allows any email & auto-provisioning). */
   authDemoMode:

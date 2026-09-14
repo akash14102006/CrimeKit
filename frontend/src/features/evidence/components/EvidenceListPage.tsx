@@ -12,7 +12,8 @@ export function EvidenceListPage() {
   const canUpload = hasPermission("case:update") || hasPermission("case:create");
 
   return (
-    <AuthGuard allowedRoles={["admin", "investigator", "analyst", "viewer"]}>
+    <AuthGuard allowedRoles={["admin", "investigator", "analyst", "viewer", "demo_evaluator", "jury_evaluator"]}>
+
       <div className="space-y-6">
         <EvidenceBreadcrumbs items={[{ label: "Evidence" }]} />
         <div className="flex items-center justify-between">

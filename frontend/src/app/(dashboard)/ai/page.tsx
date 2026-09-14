@@ -71,7 +71,8 @@ function AISelectCase() {
 
 export default function AISelectCasePage() {
   return (
-    <AuthGuard allowedRoles={["admin", "investigator", "analyst"]}>
+    <AuthGuard allowedRoles={["admin", "investigator", "analyst", "demo_evaluator", "jury_evaluator"]}>
+
       <AISelectCase />
     </AuthGuard>
   );

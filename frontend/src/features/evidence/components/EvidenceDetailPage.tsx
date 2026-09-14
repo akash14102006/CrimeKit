@@ -22,7 +22,7 @@ export function EvidenceDetailPage() {
 
   if (isError) {
     return (
-      <AuthGuard allowedRoles={["admin", "investigator", "analyst", "viewer"]}>
+      <AuthGuard allowedRoles={["admin", "investigator", "analyst", "viewer", "demo_evaluator", "jury_evaluator"]}>
         <div className="space-y-6">
           <EvidenceBreadcrumbs items={[{ label: "Evidence", href: "/evidence" }, { label: "Not Found" }]} />
           <ErrorState
@@ -36,7 +36,8 @@ export function EvidenceDetailPage() {
   }
 
   return (
-    <AuthGuard allowedRoles={["admin", "investigator", "analyst", "viewer"]}>
+    <AuthGuard allowedRoles={["admin", "investigator", "analyst", "viewer", "demo_evaluator", "jury_evaluator"]}>
+
       <div className="space-y-6">
         <EvidenceBreadcrumbs
           items={[

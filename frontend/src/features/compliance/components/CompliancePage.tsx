@@ -138,7 +138,8 @@ function ComplianceContent() {
 export default function CompliancePage() {
   return (
     <AuthGuard
-      allowedRoles={["admin", "investigator", "analyst", "compliance_officer"]}
+      allowedRoles={["admin", "investigator", "analyst", "compliance_officer", "demo_evaluator", "jury_evaluator"]}
+
     >
       <Suspense
         fallback={

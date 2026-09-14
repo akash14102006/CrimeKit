@@ -8,7 +8,10 @@ export type RoleName =
   | "evidence_officer"
   | "compliance_officer"
   | "auditor"
-  | "viewer";
+  | "viewer"
+  | "demo_evaluator"
+  | "jury_evaluator";
+
 
 /** Legacy alias used by some client code paths. */
 export type LegacyRoleName = "user";

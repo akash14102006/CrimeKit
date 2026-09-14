@@ -28,6 +28,14 @@ def get_db():
         db.close()
 
 
+def _check_case_access(current_user: models.User, case: models.Case) -> None:
+    roles = [r.name.lower() for r in current_user.roles] if current_user.roles else []
+    if 'admin' in roles or 'investigator' in roles or 'jury_evaluator' in roles or 'demo_evaluator' in roles or current_user.id == case.created_by:
+        return
+    raise HTTPException(status_code=403, detail='Forbidden')
+
+
+
 @router.get('/cases/{case_id}', response_model=InvestigationWorkspaceResponse)
 async def get_workspace(
     case_id: str,
@@ -39,9 +47,7 @@ async def get_workspace(
     if not case:
         raise HTTPException(status_code=404, detail='Case not found')
 
-    roles = [r.name for r in current_user.roles]
-    if 'admin' not in roles and 'investigator' not in roles and current_user.id != case.created_by:
-        raise HTTPException(status_code=403, detail='Forbidden')
+    _check_case_access(current_user, case)
 
     service = WorkspaceService(db)
     return await service.get_workspace(case_id)
@@ -58,9 +64,7 @@ async def get_workspace_evidence(
     if not case:
         raise HTTPException(status_code=404, detail='Case not found')
 
-    roles = [r.name for r in current_user.roles]
-    if 'admin' not in roles and 'investigator' not in roles and current_user.id != case.created_by:
-        raise HTTPException(status_code=403, detail='Forbidden')
+    _check_case_access(current_user, case)
 
     service = WorkspaceService(db)
     ws = await service.get_workspace(case_id)
@@ -78,9 +82,7 @@ async def get_workspace_custody(
     if not case:
         raise HTTPException(status_code=404, detail='Case not found')
 
-    roles = [r.name for r in current_user.roles]
-    if 'admin' not in roles and 'investigator' not in roles and current_user.id != case.created_by:
-        raise HTTPException(status_code=403, detail='Forbidden')
+    _check_case_access(current_user, case)
 
     service = WorkspaceService(db)
     ws = await service.get_workspace(case_id)
@@ -98,9 +100,7 @@ async def get_workspace_timeline(
     if not case:
         raise HTTPException(status_code=404, detail='Case not found')
 
-    roles = [r.name for r in current_user.roles]
-    if 'admin' not in roles and 'investigator' not in roles and current_user.id != case.created_by:
-        raise HTTPException(status_code=403, detail='Forbidden')
+    _check_case_access(current_user, case)
 
     service = WorkspaceService(db)
     ws = await service.get_workspace(case_id)
@@ -118,9 +118,7 @@ async def get_workspace_progress(
     if not case:
         raise HTTPException(status_code=404, detail='Case not found')
 
-    roles = [r.name for r in current_user.roles]
-    if 'admin' not in roles and 'investigator' not in roles and current_user.id != case.created_by:
-        raise HTTPException(status_code=403, detail='Forbidden')
+    _check_case_access(current_user, case)
 
     service = WorkspaceService(db)
     ws = await service.get_workspace(case_id)
@@ -138,9 +136,7 @@ async def get_workspace_risks(
     if not case:
         raise HTTPException(status_code=404, detail='Case not found')
 
-    roles = [r.name for r in current_user.roles]
-    if 'admin' not in roles and 'investigator' not in roles and current_user.id != case.created_by:
-        raise HTTPException(status_code=403, detail='Forbidden')
+    _check_case_access(current_user, case)
 
     service = WorkspaceService(db)
     ws = await service.get_workspace(case_id)
@@ -158,9 +154,7 @@ async def get_workspace_kg_summary(
     if not case:
         raise HTTPException(status_code=404, detail='Case not found')
 
-    roles = [r.name for r in current_user.roles]
-    if 'admin' not in roles and 'investigator' not in roles and current_user.id != case.created_by:
-        raise HTTPException(status_code=403, detail='Forbidden')
+    _check_case_access(current_user, case)
 
     service = WorkspaceService(db)
     ws = await service.get_workspace(case_id)
@@ -178,9 +172,7 @@ async def get_workspace_ai_findings(
     if not case:
         raise HTTPException(status_code=404, detail='Case not found')
 
-    roles = [r.name for r in current_user.roles]
-    if 'admin' not in roles and 'investigator' not in roles and current_user.id != case.created_by:
-        raise HTTPException(status_code=403, detail='Forbidden')
+    _check_case_access(current_user, case)
 
     service = WorkspaceService(db)
     ws = await service.get_workspace(case_id)
@@ -198,9 +190,7 @@ async def get_workspace_court_report(
     if not case:
         raise HTTPException(status_code=404, detail='Case not found')
 
-    roles = [r.name for r in current_user.roles]
-    if 'admin' not in roles and 'investigator' not in roles and current_user.id != case.created_by:
-        raise HTTPException(status_code=403, detail='Forbidden')
+    _check_case_access(current_user, case)
 
     service = WorkspaceService(db)
     ws = await service.get_workspace(case_id)

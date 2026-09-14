@@ -16,7 +16,8 @@ function SearchFallback() {
 export default function SearchPage() {
   return (
     <AuthGuard
-      allowedRoles={["admin", "investigator", "analyst", "evidence_officer", "compliance_officer", "auditor", "viewer"]}
+      allowedRoles={["admin", "investigator", "analyst", "evidence_officer", "compliance_officer", "auditor", "viewer", "demo_evaluator", "jury_evaluator"]}
+
     >
       <Suspense fallback={<SearchFallback />}>
         <SearchContent />

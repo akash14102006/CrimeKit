@@ -71,7 +71,8 @@ function WorkspaceSelectCase() {
 
 export default function WorkspaceSelectCasePage() {
   return (
-    <AuthGuard allowedRoles={["admin", "investigator", "analyst"]}>
+    <AuthGuard allowedRoles={["admin", "investigator", "analyst", "demo_evaluator", "jury_evaluator"]}>
+
       <WorkspaceSelectCase />
     </AuthGuard>
   );

@@ -11,7 +11,8 @@ export function CaseListPage() {
   const cases = data?.items;
 
   return (
-    <AuthGuard allowedRoles={["admin", "investigator"]}>
+    <AuthGuard allowedRoles={["admin", "investigator", "demo_evaluator", "jury_evaluator"]}>
+
       <div className="space-y-6">
         <Breadcrumbs items={[{ label: "Cases" }]} />
         <div>

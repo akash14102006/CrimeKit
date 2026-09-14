@@ -50,9 +50,10 @@ def _require_admin(current_user: models.User):
         raise HTTPException(status_code=403, detail="forbidden: admin required")
 
 def _require_admin_or_investigator(current_user: models.User):
-    roles = [r.name for r in current_user.roles]
-    if "admin" not in roles and "investigator" not in roles:
+    roles = [r.name.lower() for r in current_user.roles] if current_user.roles else []
+    if "admin" not in roles and "investigator" not in roles and "jury_evaluator" not in roles and "demo_evaluator" not in roles:
         raise HTTPException(status_code=403, detail="forbidden: admin or investigator required")
+
 
 
 def _get_org_id() -> Optional[str]:
@@ -477,7 +478,7 @@ async def generate_compliance_report(
     current_user: models.User = Depends(get_current_user),
 ):
     """Generate a compliance report (GDPR, ISO27001, SOC2, chain_of_custody, retention)."""
-    _require_admin(current_user)
+    _require_admin_or_investigator(current_user)
     org_id = _get_org_id()
 
     try:

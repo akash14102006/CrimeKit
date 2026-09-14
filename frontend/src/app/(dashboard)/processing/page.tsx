@@ -15,7 +15,8 @@ function ProcessingFallback() {
 
 export default function ProcessingPageRoute() {
   return (
-    <AuthGuard allowedRoles={["admin", "investigator", "analyst"]}>
+    <AuthGuard allowedRoles={["admin", "investigator", "analyst", "demo_evaluator", "jury_evaluator"]}>
+
       <Suspense fallback={<ProcessingFallback />}>
         <ProcessingContent />
       </Suspense>

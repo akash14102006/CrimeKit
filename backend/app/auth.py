@@ -18,7 +18,14 @@ EMAIL_REGEX = re.compile(r"^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$")
 
 
 def is_auth_demo_mode() -> bool:
-    """Return True if demo/development authentication mode is active."""
+    """Return True if demo/development authentication mode is active.
+    
+    Checks DEMO_MODE or AUTH_DEMO_MODE environment variables.
+    Defaults to true for demo/evaluation environments.
+    """
+    demo_env = os.getenv("DEMO_MODE")
+    if demo_env is not None:
+        return demo_env.strip().lower() in ("true", "1", "yes", "on")
     val = os.getenv("AUTH_DEMO_MODE", "true").strip().lower()
     return val in ("true", "1", "yes", "on")
 
@@ -140,6 +147,20 @@ def _sync_descope_user(db: Session, payload: dict) -> models.User:
             user.email = email
             db.commit()
             db.refresh(user)
+        # Ensure jury evaluator access is available if user has no role or is viewer/demo_evaluator
+        user_role_names = [r.name.lower() for r in user.roles] if user.roles else []
+        privileged_roles = {"admin", "investigator", "analyst", "evidence_officer", "compliance_officer", "auditor"}
+        # If user has an existing privileged role (admin, investigator, etc.), preserve completely.
+        # If user only has viewer or demo_evaluator or no roles, ensure jury_evaluator is added!
+        if not any(r in privileged_roles for r in user_role_names) and "jury_evaluator" not in user_role_names:
+            jury_role = db.query(models.Role).filter(models.Role.name == "jury_evaluator").first()
+            if not jury_role:
+                jury_role = models.Role(name="jury_evaluator", description="Hackathon Jury Evaluator with full functional access")
+                db.add(jury_role)
+                db.flush()
+            user.roles.append(jury_role)
+            db.commit()
+            db.refresh(user)
         return user
     else:
         # Create new user record
@@ -159,6 +180,10 @@ def _sync_descope_user(db: Session, payload: dict) -> models.User:
             "evidence_officer": "evidence_officer",
             "compliance_officer": "compliance_officer",
             "auditor": "auditor",
+            "jury_evaluator": "jury_evaluator",
+            "demo_evaluator": "jury_evaluator",
+            "evaluator": "jury_evaluator",
+            "jury": "jury_evaluator",
         }
         assigned_role = False
         for descope_role in descope_roles:
@@ -170,14 +195,14 @@ def _sync_descope_user(db: Session, payload: dict) -> models.User:
                 user.roles.append(local_role)
                 assigned_role = True
 
-        # Enforce least-privilege: default role is 'viewer' in production, 'investigator' in demo mode
+        # Default role for all newly authenticated judges: 'jury_evaluator'
         if not assigned_role:
-            default_role_name = "investigator" if is_auth_demo_mode() else "viewer"
+            default_role_name = "jury_evaluator"
             default_role = db.query(models.Role).filter(
                 models.Role.name == default_role_name
             ).first()
             if not default_role:
-                default_role = models.Role(name=default_role_name, description=f"Default {default_role_name} role")
+                default_role = models.Role(name=default_role_name, description="Hackathon Jury Evaluator with full functional access")
                 db.add(default_role)
                 db.flush()
             user.roles.append(default_role)
@@ -206,6 +231,12 @@ _ROLE_CANONICAL_MAP = {
     "admin":               "admin",
     "investigator":        "investigator",
     "analyst":             "analyst",
+    "jury_evaluator":      "jury_evaluator",
+    "jury evaluator":      "jury_evaluator",
+    "jury":                "jury_evaluator",
+    "demo_evaluator":      "jury_evaluator",
+    "evaluator":           "jury_evaluator",
+    "demo evaluator":      "jury_evaluator",
 }
 
 _ROLE_PERMISSIONS = {
@@ -213,13 +244,39 @@ _ROLE_PERMISSIONS = {
                            "evidence:read", "evidence:upload", "evidence:update", "evidence:delete",
                            "kg:query", "timeline:read", "search:query", "compliance:manage",
                            "audit:read", "user:manage", "analytics:read"],
-    "investigator":       ["case:read", "case:create", "case:update",
+    "investigator":       ["case:read", "case:create", "case:update", "case:delete",
                            "evidence:read", "evidence:upload", "evidence:update", "evidence:delete",
                            "kg:query", "timeline:read", "search:query", "analytics:read"],
-    "analyst":            ["evidence:read", "kg:query", "timeline:read", "analytics:read"],
-    "viewer":             ["evidence:read", "kg:query", "timeline:read"],
+    "jury_evaluator":     ["case:create", "case:read", "case:update", "case:delete",
+                           "evidence:create", "evidence:upload", "evidence:read", "evidence:update", "evidence:delete",
+                           "processing:create", "processing:read", "processing:update", "processing:delete",
+                           "workspace:create", "workspace:read", "workspace:update", "workspace:delete",
+                           "ai:ingest", "ai:query", "ai:read",
+                           "kg:query", "kg:read", "kg:create", "kg:update",
+                           "timeline:read", "timeline:create", "timeline:update",
+                           "search:query",
+                           "reports:create", "reports:read", "reports:update", "reports:delete",
+                           "compliance:read", "compliance:create", "compliance:update", "compliance:export",
+                           "analytics:read",
+                           "dashboard:read",
+                           "settings:read", "settings:update"],
+    "demo_evaluator":     ["case:create", "case:read", "case:update", "case:delete",
+                           "evidence:create", "evidence:upload", "evidence:read", "evidence:update", "evidence:delete",
+                           "processing:create", "processing:read", "processing:update", "processing:delete",
+                           "workspace:create", "workspace:read", "workspace:update", "workspace:delete",
+                           "ai:ingest", "ai:query", "ai:read",
+                           "kg:query", "kg:read", "kg:create", "kg:update",
+                           "timeline:read", "timeline:create", "timeline:update",
+                           "search:query",
+                           "reports:create", "reports:read", "reports:update", "reports:delete",
+                           "compliance:read", "compliance:create", "compliance:update", "compliance:export",
+                           "analytics:read",
+                           "dashboard:read",
+                           "settings:read", "settings:update"],
+    "analyst":            ["case:read", "evidence:read", "kg:query", "timeline:read", "analytics:read"],
+    "viewer":             ["case:read", "evidence:read", "kg:query", "timeline:read"],
     "evidence_officer":   ["evidence:read", "evidence:upload", "evidence:update", "case:read", "timeline:read"],
-    "compliance_officer": ["evidence:read", "case:read", "timeline:read", "kg:query"],
+    "compliance_officer": ["evidence:read", "case:read", "timeline:read", "kg:query", "compliance:manage"],
     "auditor":            ["evidence:read", "case:read", "audit:read"],
 }
 
@@ -239,7 +296,18 @@ def role_required(allowed: str | list[str]):
 
     normalized_allowed = [r.lower() for r in allowed_roles]
     if "user" in normalized_allowed:
-        normalized_allowed.extend(["investigator", "admin", "analyst", "viewer"])
+        normalized_allowed.extend(["investigator", "admin", "analyst", "viewer", "jury_evaluator", "demo_evaluator"])
+    if "investigator" in normalized_allowed:
+        if "jury_evaluator" not in normalized_allowed:
+            normalized_allowed.append("jury_evaluator")
+        if "demo_evaluator" not in normalized_allowed:
+            normalized_allowed.append("demo_evaluator")
+    if "analyst" in normalized_allowed and "jury_evaluator" not in normalized_allowed:
+        normalized_allowed.append("jury_evaluator")
+    if "evidence_officer" in normalized_allowed and "jury_evaluator" not in normalized_allowed:
+        normalized_allowed.append("jury_evaluator")
+    if "compliance_officer" in normalized_allowed and "jury_evaluator" not in normalized_allowed:
+        normalized_allowed.append("jury_evaluator")
 
     def _checker(user: models.User = Depends(get_current_user)):
         user_roles = [r.name.lower() for r in user.roles] if user.roles else []
@@ -251,6 +319,7 @@ def role_required(allowed: str | list[str]):
             return user
         raise HTTPException(status_code=403, detail='forbidden: insufficient permissions')
     return _checker
+
 
 
 # ─── Endpoints ───────────────────────────────────────────────────────────────
@@ -276,16 +345,18 @@ def login(payload: dict, db: Session = Depends(get_db)):
                 password_hash="",
                 is_active=True,
             )
-            # Assign default investigator role
-            default_role = db.query(models.Role).filter(models.Role.name == "investigator").first()
+            # Assign default role for demo mode
+            default_role_name = "jury_evaluator" if demo_mode else "investigator"
+            default_role = db.query(models.Role).filter(models.Role.name == default_role_name).first()
             if not default_role:
-                default_role = models.Role(name="investigator", description="Default investigator role")
+                default_role = models.Role(name=default_role_name, description="Hackathon Jury Evaluator with full functional access")
                 db.add(default_role)
                 db.flush()
             user.roles.append(default_role)
             db.add(user)
             db.commit()
             db.refresh(user)
+
         else:
             if not user.is_active:
                 raise HTTPException(status_code=403, detail="Account disabled")

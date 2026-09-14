@@ -118,7 +118,7 @@ def test_p2_002_b_and_e_new_user_least_privilege_viewer(setup_database, monkeypa
     assert user is not None
     assert user.email == "newbie@descope.test"
     role_names = [r.name for r in user.roles]
-    assert "viewer" in role_names
+    assert "jury_evaluator" in role_names
     assert "investigator" not in role_names
     assert "admin" not in role_names
 
@@ -151,7 +151,7 @@ def test_p2_002_f_and_g_repeated_login_idempotency_and_role_preservation(setup_d
     payload = {"email": "idempotent@descope.test", "sub": "descope_idemp_1"}
     user1 = _sync_descope_user(db, payload)
     assert len(user1.roles) == 1
-    assert user1.roles[0].name == "viewer"
+    assert user1.roles[0].name == "jury_evaluator"
 
     # Admin promotes user locally to analyst
     analyst_role = db.query(models.Role).filter(models.Role.name == "analyst").first()
@@ -162,7 +162,7 @@ def test_p2_002_f_and_g_repeated_login_idempotency_and_role_preservation(setup_d
     user2 = _sync_descope_user(db, payload)
     assert user2.id == user1.id
     role_names = [r.name for r in user2.roles]
-    assert "viewer" in role_names
+    assert "jury_evaluator" in role_names
     assert "analyst" in role_names  # Locally granted role was preserved!
 
 

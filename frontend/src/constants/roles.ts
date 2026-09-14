@@ -11,6 +11,8 @@ export const ROLES: readonly RoleName[] = [
   "compliance_officer",
   "auditor",
   "viewer",
+  "demo_evaluator",
+  "jury_evaluator",
 ] as const;
 
 /** Legacy role name accepted for backward compatibility. */
@@ -27,6 +29,8 @@ export const ROLE_LABELS: Record<RoleWithLegacy, string> = {
   compliance_officer: "Compliance Officer",
   auditor: "Auditor",
   viewer: "Viewer",
+  demo_evaluator: "Demo Evaluator",
+  jury_evaluator: "Jury Evaluator",
   user: "User",
 };
 
@@ -61,6 +65,7 @@ export const ROLE_PERMISSIONS: Record<RoleName, readonly PermissionName[]> = {
     "case:create",
     "case:read",
     "case:update",
+    "case:delete",
     "evidence:upload",
     "evidence:read",
     "evidence:update",
@@ -69,6 +74,39 @@ export const ROLE_PERMISSIONS: Record<RoleName, readonly PermissionName[]> = {
     "timeline:read",
     "search:query",
   ],
+  jury_evaluator: [
+    "case:create",
+    "case:read",
+    "case:update",
+    "case:delete",
+    "evidence:upload",
+    "evidence:read",
+    "evidence:update",
+    "evidence:delete",
+    "kg:query",
+    "timeline:read",
+    "search:query",
+    "compliance:manage",
+    "audit:read",
+    "analytics:read",
+  ],
+  demo_evaluator: [
+    "case:create",
+    "case:read",
+    "case:update",
+    "case:delete",
+    "evidence:upload",
+    "evidence:read",
+    "evidence:update",
+    "evidence:delete",
+    "kg:query",
+    "timeline:read",
+    "search:query",
+    "compliance:manage",
+    "audit:read",
+    "analytics:read",
+  ],
+
   analyst: [
     "case:read",
     "evidence:read",

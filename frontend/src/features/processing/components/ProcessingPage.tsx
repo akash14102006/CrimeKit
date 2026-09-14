@@ -182,7 +182,8 @@ function ProcessingContent() {
 export default function ProcessingPage() {
   return (
     <AuthGuard
-      allowedRoles={["admin", "investigator", "analyst"]}
+      allowedRoles={["admin", "investigator", "analyst", "demo_evaluator", "jury_evaluator"]}
+
     >
       <Suspense
         fallback={

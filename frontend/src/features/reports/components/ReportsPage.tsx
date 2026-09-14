@@ -205,7 +205,8 @@ function ReportsContent() {
 export default function ReportsPage() {
   return (
     <AuthGuard
-      allowedRoles={["admin", "investigator", "analyst", "evidence_officer", "compliance_officer"]}
+      allowedRoles={["admin", "investigator", "analyst", "evidence_officer", "compliance_officer", "demo_evaluator", "jury_evaluator"]}
+
     >
       <Suspense
         fallback={

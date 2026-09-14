@@ -26,7 +26,11 @@ export function AuthGuard({ children, allowedRoles }: AuthGuardProps) {
   const hydrated = useHasHydrated(useAuthStore);
 
   const isAuth = isAuthenticated && !!sessionToken;
-  const authorized = isAuth && (!allowedRoles || (!!user && allowedRoles.some((r) => (user.roles as string[])?.includes(r))));
+  const userRoles = (user?.roles as string[]) ?? (user?.role ? [user.role] : []);
+  const isJury = userRoles.includes("jury_evaluator") || userRoles.includes("demo_evaluator");
+  const isStrictAdminOnly = !!allowedRoles && allowedRoles.length === 1 && allowedRoles[0] === "admin";
+  const authorized = isAuth && (!allowedRoles || (isJury && !isStrictAdminOnly) || (!!user && allowedRoles.some((r) => userRoles.includes(r))));
+
 
   useEffect(() => {
     if (!hydrated || !sessionResolved) return;

@@ -8,7 +8,8 @@ export const metadata: Metadata = {
 
 export default function Page() {
   return (
-    <AuthGuard allowedRoles={["admin", "investigator", "analyst", "viewer"]}>
+    <AuthGuard allowedRoles={["admin", "investigator", "analyst", "viewer", "demo_evaluator", "jury_evaluator"]}>
+
       <GraphPage />
     </AuthGuard>
   );

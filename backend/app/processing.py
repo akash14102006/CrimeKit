@@ -39,9 +39,10 @@ def enqueue_processing(evidence_id: str, request: dict | None = None, db: Sessio
     ev = db.query(models.Evidence).filter(models.Evidence.id == evidence_id).first()
     if not ev:
         raise HTTPException(status_code=404, detail='evidence not found')
-    roles = [r.name for r in current_user.roles]
-    if 'admin' not in roles and 'investigator' not in roles and current_user.id != ev.uploaded_by:
+    roles = [r.name.lower() for r in current_user.roles] if current_user.roles else []
+    if 'admin' not in roles and 'investigator' not in roles and 'jury_evaluator' not in roles and 'demo_evaluator' not in roles and current_user.id != ev.uploaded_by:
         raise HTTPException(status_code=403, detail='forbidden')
+
 
     processors = request.get('processors') if request else None
     if not processors:

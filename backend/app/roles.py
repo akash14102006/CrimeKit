@@ -26,7 +26,7 @@ ENTERPRISE_ROLES = [
     "Super Admin", "Platform Admin", "Organization Admin",
     "Senior Investigator", "Investigator", "Forensic Analyst",
     "Evidence Officer", "AI Analyst", "Legal Officer",
-    "Compliance Officer", "Auditor", "Viewer", "admin", "analyst"
+    "Compliance Officer", "Auditor", "Viewer", "admin", "analyst", "demo_evaluator", "jury_evaluator"
 ]
 
 def require_any_role(*roles: str):
@@ -34,6 +34,13 @@ def require_any_role(*roles: str):
     def _checker(user: models.User = Depends(role_required(roles[0])) if len(roles) == 1 else Depends(crud.get_user_by_email if False else role_required(roles[0]))):
         user_role_names = [r.name.lower() for r in user.roles]
         target_roles = [r.lower() for r in roles]
+        if "investigator" in target_roles:
+            if "jury_evaluator" not in target_roles:
+                target_roles.append("jury_evaluator")
+            if "demo_evaluator" not in target_roles:
+                target_roles.append("demo_evaluator")
+        if "analyst" in target_roles and "jury_evaluator" not in target_roles:
+            target_roles.append("jury_evaluator")
         # Super admin / admin bypass
         if "admin" in user_role_names or "super admin" in user_role_names:
             return user
@@ -41,6 +48,7 @@ def require_any_role(*roles: str):
             return user
         raise HTTPException(status_code=403, detail="Forbidden: Required role missing")
     return _checker
+
 
 
 @router.post('/assign')

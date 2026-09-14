@@ -26,7 +26,7 @@ export function CaseDetailPage({ caseId }: CaseDetailPageProps) {
 
   if (isError) {
     return (
-      <AuthGuard allowedRoles={["admin", "investigator"]}>
+      <AuthGuard allowedRoles={["admin", "investigator", "demo_evaluator", "jury_evaluator"]}>
         <div className="space-y-6">
           <Breadcrumbs
             items={[
@@ -46,7 +46,7 @@ export function CaseDetailPage({ caseId }: CaseDetailPageProps) {
 
   if (isLoading || !caseItem) {
     return (
-      <AuthGuard allowedRoles={["admin", "investigator"]}>
+      <AuthGuard allowedRoles={["admin", "investigator", "demo_evaluator", "jury_evaluator"]}>
         <div className="space-y-6">
           <Skeleton className="h-5 w-[200px]" />
           <Skeleton className="h-8 w-[300px]" />
@@ -69,7 +69,8 @@ export function CaseDetailPage({ caseId }: CaseDetailPageProps) {
   const canDelete = hasPermission("case:delete");
 
   return (
-    <AuthGuard allowedRoles={["admin", "investigator"]}>
+    <AuthGuard allowedRoles={["admin", "investigator", "demo_evaluator", "jury_evaluator"]}>
+
       <div className="space-y-6">
         <Breadcrumbs
           items={[

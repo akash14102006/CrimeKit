@@ -242,7 +242,10 @@ export default function SearchPage() {
         "compliance_officer",
         "auditor",
         "viewer",
+        "demo_evaluator",
+        "jury_evaluator",
       ]}
+
     >
       <Suspense
         fallback={

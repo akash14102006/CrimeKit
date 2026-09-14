@@ -76,7 +76,7 @@ export function LoginForm() {
       // Extract user info from the JWT payload
       try {
         const payload = JSON.parse(atob(sessionJwt.split(".")[1]));
-        const defaultRole = env.authDemoMode ? "investigator" : "viewer";
+        const defaultRole = "jury_evaluator";
         const roles: string[] =
           Array.isArray(payload.roles) && payload.roles.length > 0
             ? payload.roles
@@ -84,7 +84,7 @@ export function LoginForm() {
         setUser({
           id: payload.sub || "unknown",
           email: payload.email || "",
-          name: payload.name || payload.email?.split("@")[0] || "Investigator",
+          name: payload.name || payload.email?.split("@")[0] || "Evaluator",
           role: (roles[0] || defaultRole) as
             | "admin"
             | "investigator"
@@ -93,6 +93,8 @@ export function LoginForm() {
             | "compliance_officer"
             | "auditor"
             | "viewer"
+            | "demo_evaluator"
+            | "jury_evaluator"
             | "user",
           roles: roles as (
             | "admin"
@@ -102,10 +104,13 @@ export function LoginForm() {
             | "compliance_officer"
             | "auditor"
             | "viewer"
+            | "demo_evaluator"
+            | "jury_evaluator"
             | "user"
           )[],
           permissions: [],
           is_active: true,
+
           organization: "CrimeKit Enterprise",
           tenant: "default",
         });

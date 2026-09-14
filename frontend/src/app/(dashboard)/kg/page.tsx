@@ -71,7 +71,8 @@ function KGSelectCase() {
 
 export default function KGSelectCasePage() {
   return (
-    <AuthGuard allowedRoles={["admin", "investigator", "analyst"]}>
+    <AuthGuard allowedRoles={["admin", "investigator", "analyst", "demo_evaluator", "jury_evaluator"]}>
+
       <KGSelectCase />
     </AuthGuard>
   );

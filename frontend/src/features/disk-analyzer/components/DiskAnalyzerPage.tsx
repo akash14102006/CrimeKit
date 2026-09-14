@@ -48,7 +48,7 @@ export function DiskAnalyzerPage() {
 
   if (evidenceError) {
     return (
-      <AuthGuard allowedRoles={["admin", "investigator", "analyst", "viewer"]}>
+      <AuthGuard allowedRoles={["admin", "investigator", "analyst", "viewer", "demo_evaluator", "jury_evaluator"]}>
         <div className="space-y-6 p-6">
           <ErrorState
             title="Evidence not found"
@@ -62,7 +62,7 @@ export function DiskAnalyzerPage() {
 
   if (evidenceLoading) {
     return (
-      <AuthGuard allowedRoles={["admin", "investigator", "analyst", "viewer"]}>
+      <AuthGuard allowedRoles={["admin", "investigator", "analyst", "viewer", "demo_evaluator", "jury_evaluator"]}>
         <LoadingState label="Loading evidence..." />
       </AuthGuard>
     );
@@ -71,7 +71,8 @@ export function DiskAnalyzerPage() {
   const activeView = store.activeView;
 
   return (
-    <AuthGuard allowedRoles={["admin", "investigator", "analyst", "viewer"]}>
+    <AuthGuard allowedRoles={["admin", "investigator", "analyst", "viewer", "demo_evaluator", "jury_evaluator"]}>
+
       <div className="flex h-full flex-col">
         <DiskAnalyzerHeader
           evidence={evidence}

@@ -72,5 +72,11 @@ export function hasRole(
 ): boolean {
   const { roles } = resolvePermissions(profile);
   const targets = Array.isArray(role) ? role : [role];
+  const isJury = roles.includes("jury_evaluator") || roles.includes("demo_evaluator");
+  const isStrictAdminOnly = targets.length === 1 && targets[0] === "admin";
+  if (isJury && !isStrictAdminOnly) {
+    return true;
+  }
   return targets.some((t) => roles.includes(t));
 }
+

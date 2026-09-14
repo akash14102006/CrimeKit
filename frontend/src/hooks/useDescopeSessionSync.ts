@@ -30,7 +30,7 @@ export function useDescopeSessionSync() {
 
       if (descopeUser) {
         const descopeRoles = (descopeUser as Record<string, unknown>).roles;
-        const defaultRole = env.authDemoMode ? "investigator" : "viewer";
+        const defaultRole = "jury_evaluator";
         const roles: string[] = Array.isArray(descopeRoles) && descopeRoles.length > 0
           ? descopeRoles.map((r: unknown) => String(r).toLowerCase())
           : [defaultRole];
@@ -38,14 +38,15 @@ export function useDescopeSessionSync() {
         setUser({
           id: descopeUser.userId ?? descopeUser.loginIds?.[0] ?? "unknown",
           email: descopeUser.email ?? descopeUser.phone ?? "",
-          name: descopeUser.name ?? descopeUser.email?.split("@")[0] ?? "Investigator",
-          role: primaryRole as "admin" | "investigator" | "analyst" | "evidence_officer" | "compliance_officer" | "auditor" | "viewer" | "user",
-          roles: roles as ("admin" | "investigator" | "analyst" | "evidence_officer" | "compliance_officer" | "auditor" | "viewer" | "user")[],
+          name: descopeUser.name ?? descopeUser.email?.split("@")[0] ?? "Evaluator",
+          role: primaryRole as "admin" | "investigator" | "analyst" | "evidence_officer" | "compliance_officer" | "auditor" | "viewer" | "demo_evaluator" | "jury_evaluator" | "user",
+          roles: roles as ("admin" | "investigator" | "analyst" | "evidence_officer" | "compliance_officer" | "auditor" | "viewer" | "demo_evaluator" | "jury_evaluator" | "user")[],
           permissions: [],
           is_active: true,
           organization: "CrimeKit Enterprise",
           tenant: "default",
         });
+
       }
     }
 

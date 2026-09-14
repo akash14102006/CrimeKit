@@ -91,7 +91,8 @@ def assign_case(case_id: str, payload: schemas.CaseUpdate, db: Session = Depends
 
 
 @router.delete('/{case_id}', status_code=204)
-def delete_case(case_id: str, db: Session = Depends(get_db), _: models.User = Depends(role_required(['investigator', 'admin']))):
+def delete_case(case_id: str, db: Session = Depends(get_db), current_user: models.User = Depends(role_required(['investigator', 'admin', 'jury_evaluator']))):
+
     # Legal hold protection — block deletion of a case under an active legal hold.
     try:
         from .compliance import DataRetentionService

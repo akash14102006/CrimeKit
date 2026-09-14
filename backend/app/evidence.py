@@ -278,9 +278,9 @@ def list_case_evidence(case_id: str, db: Session = Depends(get_db), current_user
 
 @router.post('/{evidence_id}/custody')
 def append_custody(evidence_id: str, payload: dict, db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
-    # RBAC: only admin or investigator can append
-    roles = [r.name for r in current_user.roles]
-    if 'admin' not in roles and 'investigator' not in roles:
+    # RBAC: admin, investigator, jury_evaluator can append
+    roles = [r.name.lower() for r in current_user.roles] if current_user.roles else []
+    if 'admin' not in roles and 'investigator' not in roles and 'jury_evaluator' not in roles and 'demo_evaluator' not in roles:
         raise HTTPException(status_code=403, detail='forbidden')
 
     ev = db.query(models.Evidence).filter(models.Evidence.id == evidence_id).first()
@@ -327,10 +327,11 @@ def get_custody(evidence_id: str, db: Session = Depends(get_db), current_user: m
     if not ev:
         raise HTTPException(status_code=404, detail='evidence not found')
 
-    # read permission: admin, investigator, or uploader
-    roles = [r.name for r in current_user.roles]
-    if 'admin' not in roles and 'investigator' not in roles and current_user.id != ev.uploaded_by:
+    # read permission: admin, investigator, jury_evaluator, or uploader
+    roles = [r.name.lower() for r in current_user.roles] if current_user.roles else []
+    if 'admin' not in roles and 'investigator' not in roles and 'jury_evaluator' not in roles and 'demo_evaluator' not in roles and current_user.id != ev.uploaded_by:
         raise HTTPException(status_code=403, detail='forbidden')
+
 
     items = db.query(models.ChainOfCustody).filter(models.ChainOfCustody.evidence_id == evidence_id).order_by(models.ChainOfCustody.timestamp.asc()).all()
 
@@ -460,11 +461,56 @@ def download_evidence(evidence_id: str, db: Session = Depends(get_db), current_u
     )
 
 
-@router.delete('/{evidence_id}', status_code=204)
-def delete_evidence(evidence_id: str, db: Session = Depends(get_db), current_user: models.User = Depends(role_required(['investigator', 'admin']))):
+@router.patch('/{evidence_id}')
+@router.put('/{evidence_id}')
+def update_evidence(
+    evidence_id: str,
+    payload: dict,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(role_required(['investigator', 'admin', 'jury_evaluator'])),
+):
+    """Update evidence metadata, tags, notes, or case assignment."""
     ev = db.query(models.Evidence).filter(models.Evidence.id == evidence_id).first()
     if not ev:
         raise HTTPException(status_code=404, detail='evidence not found')
+    meta = dict(ev.metadata_json or {})
+    if "notes" in payload:
+        meta["notes"] = payload["notes"]
+    if "description" in payload:
+        meta["description"] = payload["description"]
+    if "tags" in payload:
+        meta["tags"] = payload["tags"]
+    if "case_id" in payload:
+        ev.case_id = payload["case_id"]
+    if "metadata" in payload and isinstance(payload["metadata"], dict):
+        meta.update(payload["metadata"])
+    ev.metadata_json = meta
+    db.add(ev)
+    db.commit()
+    db.refresh(ev)
+    return {
+        'id': ev.id,
+        'case_id': ev.case_id,
+        'filename': ev.filename,
+        'sha256': ev.sha256,
+        'size': ev.size,
+        'mime_type': ev.mime_type,
+        'metadata': _public_metadata(ev.metadata_json),
+        'uploaded_by': ev.uploaded_by,
+        'uploaded_at': ev.uploaded_at.isoformat() if ev.uploaded_at else None,
+    }
+
+
+@router.delete('/{evidence_id}', status_code=204)
+def delete_evidence(
+    evidence_id: str,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(role_required(['investigator', 'admin', 'jury_evaluator'])),
+):
+    ev = db.query(models.Evidence).filter(models.Evidence.id == evidence_id).first()
+    if not ev:
+        raise HTTPException(status_code=404, detail='evidence not found')
+
 
     # Check legal hold protection
     try:

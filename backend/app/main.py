@@ -227,6 +227,8 @@ def on_startup():
         ("compliance_officer",  "Compliance and audit access"),
         ("auditor",             "Audit log read access"),
         ("user",                "Basic authenticated user"),
+        ("demo_evaluator",      "Hackathon evaluator demonstration access"),
+        ("jury_evaluator",      "Hackathon Jury Evaluator with full functional access"),
     ]
     db = database.SessionLocal()
     try:

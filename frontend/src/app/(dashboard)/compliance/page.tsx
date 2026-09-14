@@ -15,7 +15,8 @@ function ComplianceFallback() {
 
 export default function CompliancePageRoute() {
   return (
-    <AuthGuard allowedRoles={["admin", "investigator", "analyst", "compliance_officer"]}>
+    <AuthGuard allowedRoles={["admin", "investigator", "analyst", "compliance_officer", "demo_evaluator", "jury_evaluator"]}>
+
       <Suspense fallback={<ComplianceFallback />}>
         <ComplianceContent />
       </Suspense>

@@ -15,7 +15,8 @@ function ReportsFallback() {
 
 export default function ReportsPageRoute() {
   return (
-    <AuthGuard allowedRoles={["admin", "investigator", "analyst", "evidence_officer", "compliance_officer"]}>
+    <AuthGuard allowedRoles={["admin", "investigator", "analyst", "evidence_officer", "compliance_officer", "demo_evaluator", "jury_evaluator"]}>
+
       <Suspense fallback={<ReportsFallback />}>
         <ReportsContent />
       </Suspense>
