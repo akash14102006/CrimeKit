@@ -2,6 +2,7 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="${PROJECT_ROOT:-$(cd "${SCRIPT_DIR}/../.." && pwd)}"
 LOG_FILE="${SCRIPT_DIR}/restore.log"
 
 POSTGRES_HOST="${POSTGRES_HOST:-localhost}"
@@ -13,6 +14,7 @@ POSTGRES_PASSWORD="${POSTGRES_PASSWORD:-}"
 NEO4J_URI="${NEO4J_URI:-bolt://localhost:7687}"
 NEO4J_USER="${NEO4J_USER:-neo4j}"
 NEO4J_PASSWORD="${NEO4J_PASSWORD:-}"
+NEO4J_DATABASE="${NEO4J_DATABASE:-neo4j}"
 
 MINIO_ENDPOINT="${MINIO_ENDPOINT:-localhost:9000}"
 MINIO_ACCESS_KEY="${MINIO_ACCESS_KEY:-minioadmin}"
@@ -22,22 +24,27 @@ BACKUP_DIR="${BACKUP_DIR:-/backups}"
 FORCE=false
 COMPONENT="all"
 BACKUP_FILE=""
+CONFIG_DEST="${CONFIG_DEST:-${RESTORE_CONFIG_DEST:-}}"
+ALLOW_PROD_OVERWRITE=false
 
 usage() {
   cat <<EOF
 Usage: $(basename "$0") [OPTIONS]
 
 Options:
-  --component COMPONENT    Component to restore: postgres, neo4j, minio, configs, all (default: all)
-  --backup-file FILE       Path to a specific backup file or directory
-  --force                  Skip confirmation prompts
-  -h, --help               Show this help message
+  --component COMPONENT       Component to restore: postgres, neo4j, minio, configs, all (default: all)
+  --backup-file FILE          Path to a specific backup file or directory
+  --dest-dir DIR              Destination directory for restored configurations (safe restore)
+  --allow-overwrite-prod      Explicitly permit restoring configs into live project root
+  --force                     Skip confirmation prompts
+  -h, --help                  Show this help message
 
 Environment variables:
   POSTGRES_HOST, POSTGRES_PORT, POSTGRES_DB, POSTGRES_USER, POSTGRES_PASSWORD
-  NEO4J_URI, NEO4J_USER, NEO4J_PASSWORD
+  NEO4J_URI, NEO4J_USER, NEO4J_PASSWORD, NEO4J_DATABASE
   MINIO_ENDPOINT, MINIO_ACCESS_KEY, MINIO_SECRET_KEY
   BACKUP_DIR (default: /backups)
+  RESTORE_CONFIG_DEST (safe destination for config restore)
 EOF
 }
 
@@ -61,6 +68,14 @@ parse_args() {
       --backup-file)
         BACKUP_FILE="$2"
         shift 2
+        ;;
+      --dest-dir)
+        CONFIG_DEST="$2"
+        shift 2
+        ;;
+      --allow-overwrite-prod)
+        ALLOW_PROD_OVERWRITE=true
+        shift
         ;;
       --force)
         FORCE=true
@@ -163,7 +178,7 @@ create_restore_point() {
       ;;
     neo4j)
       if command -v neo4j-admin &>/dev/null; then
-        neo4j-admin database dump --to-path="${restore_point}/neo4j_pre_restore.dump" crimekit 2>>"$LOG_FILE" \
+        neo4j-admin database dump --to-path="${restore_point}" "$NEO4J_DATABASE" 2>>"$LOG_FILE" \
           && log "Neo4j restore point created" \
           || log "WARNING: Could not create Neo4j restore point"
       fi
@@ -179,12 +194,11 @@ create_restore_point() {
       fi
       ;;
     configs)
-      local infra_dir="${SCRIPT_DIR}/../"
       tar -czf "${restore_point}/configs_pre_restore.tar.gz" \
-        -C "$infra_dir" \
+        -C "$PROJECT_ROOT" \
         --exclude='node_modules' \
         --exclude='.git' \
-        nginx/ postgres/ neo4j/ minio/ docker-compose.yml .env* 2>>"$LOG_FILE" \
+        docker-compose.yml infrastructure/ .env* 2>>"$LOG_FILE" \
         && log "Config restore point created" \
         || log "WARNING: Could not create config restore point"
       ;;
@@ -237,7 +251,7 @@ restore_postgres() {
 }
 
 restore_neo4j() {
-  log "Starting Neo4j restore..."
+  log "Starting Neo4j restore (target database: ${NEO4J_DATABASE})..."
 
   local backup_dir
   if [ -n "$BACKUP_FILE" ]; then
@@ -249,36 +263,41 @@ restore_neo4j() {
   verify_backup_integrity "$backup_dir"
   create_restore_point neo4j
 
-  if command -v neo4j-admin &>/dev/null; then
-    local dump_file
-    dump_file=$(find "$backup_dir" -name "*.dump" -type f | head -1)
-    if [ -n "$dump_file" ]; then
-      if neo4j-admin database load --from-path="$dump_file" --overwrite-destination crimekit 2>>"$LOG_FILE"; then
-        log "Neo4j admin restore completed successfully"
-      else
-        die "Neo4j admin restore failed"
-      fi
-    else
-      die "No .dump file found in $backup_dir"
-    fi
-  elif command -v cypher-shell &>/dev/null; then
-    local cypher_file
-    cypher_file=$(find "$backup_dir" -name "*.cypher" -type f | head -1)
-    if [ -n "$cypher_file" ]; then
+  local cypher_file
+  cypher_file=$(find "$backup_dir" -name "*.cypher" -type f | head -1)
+
+  local dump_file
+  dump_file=$(find "$backup_dir" -name "*.dump" -type f | head -1)
+
+  if [ -n "$cypher_file" ]; then
+    log "Restoring Neo4j from Cypher script: $cypher_file"
+    if command -v cypher-shell &>/dev/null; then
       if cypher-shell \
         -u "$NEO4J_USER" \
         -p "$NEO4J_PASSWORD" \
         -a "$NEO4J_URI" \
+        -d "$NEO4J_DATABASE" \
         -f "$cypher_file" 2>>"$LOG_FILE"; then
         log "Neo4j cypher restore completed successfully"
       else
         die "Neo4j cypher restore failed"
       fi
     else
-      die "No .cypher file found in $backup_dir"
+      die "cypher-shell not found for Cypher restore"
+    fi
+  elif [ -n "$dump_file" ]; then
+    log "Restoring Neo4j from dump archive: $dump_file"
+    if command -v neo4j-admin &>/dev/null; then
+      if neo4j-admin database load --from-path="$dump_file" --overwrite-destination=true "$NEO4J_DATABASE" 2>>"$LOG_FILE"; then
+        log "Neo4j admin restore completed successfully"
+      else
+        die "Neo4j admin restore failed"
+      fi
+    else
+      die "neo4j-admin not found for dump restore"
     fi
   else
-    die "No Neo4j restore tool available"
+    die "No .cypher or .dump backup file found in $backup_dir"
   fi
 }
 
@@ -342,11 +361,25 @@ restore_configs() {
   fi
 
   verify_backup_integrity "$backup_dir"
-  create_restore_point configs
 
-  local infra_dir="${SCRIPT_DIR}/../"
-  if tar -xzf "$tar_file" -C "$infra_dir" 2>>"$LOG_FILE"; then
-    log "Config restore completed successfully"
+  local target_dest="${CONFIG_DEST:-${RESTORE_CONFIG_DEST:-}}"
+  if [ -z "$target_dest" ]; then
+    target_dest="${BACKUP_DIR}/restored_configs_$(date -u +%Y%m%d_%H%M%S)"
+    log "No destination directory specified. Defaulting to safe isolated destination: $target_dest"
+  fi
+
+  # Safety check against production overwrite
+  if [ "$target_dest" = "$PROJECT_ROOT" ] || [ "$target_dest" = "${PROJECT_ROOT}/infrastructure" ] || [ "$target_dest" = "/opt/crimekit/app" ]; then
+    if [ "$ALLOW_PROD_OVERWRITE" != "true" ]; then
+      die "SAFETY REFUSAL: Target directory ($target_dest) is the active production project. Refusing to overwrite live configs without --allow-overwrite-prod"
+    fi
+    log "WARNING: Live production directory overwrite confirmed via --allow-overwrite-prod"
+    create_restore_point configs
+  fi
+
+  mkdir -p "$target_dest"
+  if tar -xzf "$tar_file" -C "$target_dest" 2>>"$LOG_FILE"; then
+    log "Config restore completed successfully into: $target_dest"
   else
     die "Config restore failed"
   fi

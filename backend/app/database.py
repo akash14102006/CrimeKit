@@ -78,6 +78,7 @@ def _migrate_add_columns(engine):
             ("cases", "ALTER TABLE cases ADD COLUMN updated_at TIMESTAMP"),
             ("evidence", "ALTER TABLE evidence ADD COLUMN bucket TEXT"),
             ("evidence", "ALTER TABLE evidence ADD COLUMN object_key TEXT"),
+            ("users", "ALTER TABLE users ADD COLUMN name TEXT"),
         ]
         for table, sql in migrations:
             if table in tables:

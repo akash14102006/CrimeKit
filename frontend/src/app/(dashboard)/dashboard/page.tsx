@@ -2,6 +2,7 @@
 
 import dynamic from "next/dynamic";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
+import { getSafeDisplayName } from "@/lib/userDisplay";
 import { KPIRow } from "@/features/dashboard/components/KPIRow";
 import { ActiveCases } from "@/features/dashboard/components/ActiveCases";
 import { RecentEvidence } from "@/features/dashboard/components/RecentEvidence";
@@ -41,7 +42,7 @@ export default function DashboardPage() {
       {/* Header */}
       <div>
         <h1 className="text-3xl font-bold tracking-tight">
-          {greeting()}, {user?.name ?? "Investigator"}
+          {greeting()}, {getSafeDisplayName(user, "Investigator")}
         </h1>
         <p className="text-muted-foreground">
           {user?.organization

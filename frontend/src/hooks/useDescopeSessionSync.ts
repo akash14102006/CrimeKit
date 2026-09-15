@@ -4,6 +4,7 @@ import { useEffect, useRef } from "react";
 import { useSession, useUser } from "@descope/react-sdk";
 import { useAuthStore } from "@/store/authStore";
 import { env } from "@/config/env";
+import { extractDisplayName } from "@/lib/userDisplay";
 
 /**
  * useDescopeSessionSync — bridges Descope's AuthProvider state into the Zustand auth store.
@@ -42,7 +43,7 @@ export function useDescopeSessionSync() {
         setUser({
           id: descopeUser.userId ?? descopeUser.loginIds?.[0] ?? "unknown",
           email: descopeUser.email ?? descopeUser.phone ?? "",
-          name: descopeUser.name ?? descopeUser.email?.split("@")[0] ?? "Evaluator",
+          name: extractDisplayName(descopeUser as Record<string, unknown>, "Investigator"),
           role: primaryRole as "admin" | "investigator" | "analyst" | "evidence_officer" | "compliance_officer" | "auditor" | "viewer" | "demo_evaluator" | "jury_evaluator" | "user",
           roles: roles as ("admin" | "investigator" | "analyst" | "evidence_officer" | "compliance_officer" | "auditor" | "viewer" | "demo_evaluator" | "jury_evaluator" | "user")[],
           permissions: [],

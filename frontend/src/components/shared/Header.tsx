@@ -17,6 +17,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { roleLabel } from "@/hooks/useRBAC";
 import { useDescope } from "@descope/react-sdk";
+import { getUserInitials, getSafeDisplayName } from "@/lib/userDisplay";
 
 export function Header() {
   const { user, clearSession } = useAuthStore();
@@ -59,8 +60,8 @@ export function Header() {
         <DropdownMenu>
           <DropdownMenuTrigger className="relative h-8 w-8 rounded-full focus:outline-none">
             <Avatar className="h-8 w-8">
-              <AvatarFallback className="bg-primary text-primary-foreground">
-                {user?.name?.charAt(0) || "U"}
+              <AvatarFallback className="bg-primary text-primary-foreground font-semibold text-xs">
+                {getUserInitials(user?.name || user?.email)}
               </AvatarFallback>
             </Avatar>
           </DropdownMenuTrigger>
@@ -68,7 +69,7 @@ export function Header() {
             <DropdownMenuLabel className="font-normal">
               <div className="flex flex-col space-y-1">
                 <p className="text-sm font-medium leading-none">
-                  {user?.name || "Investigator"}
+                  {getSafeDisplayName(user, "Investigator")}
                 </p>
                 <p className="text-xs leading-none text-muted-foreground">
                   {user?.email || "user@crimekit.local"}

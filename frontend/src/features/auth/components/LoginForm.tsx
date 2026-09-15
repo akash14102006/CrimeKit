@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/card";
 import { useAuthStore } from "@/store/authStore";
 import { env } from "@/config/env";
+import { extractDisplayName } from "@/lib/userDisplay";
 
 const DescopeFlow = dynamic(
   () =>
@@ -84,7 +85,7 @@ export function LoginForm() {
         setUser({
           id: payload.sub || "unknown",
           email: payload.email || "",
-          name: payload.name || payload.email?.split("@")[0] || "Evaluator",
+          name: extractDisplayName(payload, "Investigator"),
           role: (roles[0] || defaultRole) as
             | "admin"
             | "investigator"

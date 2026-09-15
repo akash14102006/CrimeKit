@@ -4,6 +4,7 @@ import { useUserProfile } from "../hooks/useSettings";
 import { ROLES, ROLE_LABELS } from "@/constants/roles";
 import type { RoleName } from "@/types/auth";
 import { User, Mail, Shield, Building2, Clock } from "lucide-react";
+import { getUserInitials, getSafeDisplayName } from "@/lib/userDisplay";
 
 export function ProfilePanel() {
   const { data: profile, isLoading } = useUserProfile();
@@ -37,10 +38,10 @@ export function ProfilePanel() {
       <div className="rounded-lg border bg-card p-6 space-y-6">
         <div className="flex items-center gap-4">
           <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary/10 text-xl font-bold text-primary">
-            {profile.email?.[0]?.toUpperCase() ?? "U"}
+            {getUserInitials(profile.name || profile.email)}
           </div>
           <div>
-            <p className="text-lg font-medium">{profile.name || profile.email}</p>
+            <p className="text-lg font-medium">{getSafeDisplayName(profile, profile.email || "Investigator")}</p>
             <p className="text-sm text-muted-foreground">{profile.email}</p>
           </div>
         </div>

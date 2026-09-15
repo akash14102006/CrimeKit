@@ -14,6 +14,8 @@ import {
 } from "lucide-react";
 import { useWorkspace, useWorkspaceProgress, useWorkspaceRisks } from "@/hooks/queries/useWorkspace";
 import { useCaseEvidence } from "@/hooks/queries/useEvidence";
+import { useCurrentUser } from "@/hooks/useCurrentUser";
+import { getSafeDisplayName } from "@/lib/userDisplay";
 import { formatBytes } from "@/lib/utils";
 
 interface Props {
@@ -48,6 +50,7 @@ function PriorityBadge({ priority }: { priority: string }) {
 }
 
 export function CaseSummaryBar({ caseId }: Props) {
+  const { user } = useCurrentUser();
   const { data: workspace, isLoading } = useWorkspace(caseId);
   const { data: evidence } = useCaseEvidence(caseId);
   const { data: progress } = useWorkspaceProgress(caseId);
@@ -116,12 +119,16 @@ export function CaseSummaryBar({ caseId }: Props) {
           </div>
         )}
 
-        {caseData?.assigned_to && (
-          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-            <Users className="h-3.5 w-3.5" />
-            <span>{caseData.assigned_to}</span>
-          </div>
-        )}
+        <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+          <Users className="h-3.5 w-3.5" />
+          <span>
+            {caseData?.assigned_to
+              ? (caseData.assigned_to === user?.email || caseData.assigned_to === user?.id
+                  ? getSafeDisplayName(user, caseData.assigned_to)
+                  : caseData.assigned_to)
+              : getSafeDisplayName(user, "Lead Investigator")}
+          </span>
+        </div>
 
         <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
           <Clock className="h-3.5 w-3.5" />

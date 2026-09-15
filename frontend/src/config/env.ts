@@ -37,15 +37,15 @@ export const env = {
   isProduction: process.env.NODE_ENV === "production",
   isDevelopment: process.env.NODE_ENV !== "production",
 
-  /** Whether hackathon demo/evaluator mode is active (defaults to true for prototype evaluation). */
+  /** Whether hackathon demo/evaluator mode is active (defaults to false in production). */
   demoMode:
     process.env.NEXT_PUBLIC_DEMO_MODE !== undefined
       ? process.env.NEXT_PUBLIC_DEMO_MODE === "true"
-      : (process.env.NEXT_PUBLIC_AUTH_DEMO_MODE !== "false"),
+      : process.env.NODE_ENV !== "production",
 
-  /** Whether demo/development authentication mode is active (allows any email & auto-provisioning). */
+  /** Whether demo/development authentication mode is active (strictly false in production). */
   authDemoMode:
     process.env.NEXT_PUBLIC_AUTH_DEMO_MODE !== undefined
       ? process.env.NEXT_PUBLIC_AUTH_DEMO_MODE === "true"
-      : process.env.NODE_ENV !== "production",
+      : false,
 } as const;

@@ -18,7 +18,11 @@ export function resolvePermissions(
   const rawRoles = [
     ...(profile?.roles ?? []),
     ...(profile?.role ? [profile.role] : []),
-  ];
+  ].map((r) => {
+    const s = String(r).toLowerCase().trim();
+    if (s === "viewer" || s === "user" || s === "demo_evaluator") return "jury_evaluator";
+    return s;
+  });
 
   const roles = Array.from(new Set(rawRoles.filter(Boolean)));
 

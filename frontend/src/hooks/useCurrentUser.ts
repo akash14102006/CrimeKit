@@ -33,15 +33,43 @@ export function useCurrentUser() {
     },
   });
 
-  // Sync the fetched profile back to the auth store.
+  // Sync the fetched profile back to the auth store, preserving rich display names.
   useEffect(() => {
     if (query.data) {
-      setUser(query.data);
+      const existingName = user?.name?.trim();
+      const backendName = query.data.name?.trim();
+      const email = query.data.email || user?.email || "";
+      const emailPrefix = email.includes("@") ? email.split("@")[0].toLowerCase() : "";
+
+      const isGoodName = (n: string | undefined): boolean =>
+        Boolean(n && !n.includes("@") && (!emailPrefix || n.toLowerCase() !== emailPrefix) && n !== "Investigator");
+
+      let resolvedName = backendName;
+      if (!isGoodName(backendName) && isGoodName(existingName)) {
+        resolvedName = existingName;
+      } else if (!resolvedName) {
+        resolvedName = existingName || email || "Investigator";
+      }
+
+      setUser({
+        ...query.data,
+        name: resolvedName,
+      });
     }
-  }, [query.data, setUser]);
+  }, [query.data, setUser, user?.name, user?.email]);
+
+  const resolvedUser = query.data
+    ? {
+        ...query.data,
+        name:
+          query.data.name && !query.data.name.includes("@") && query.data.name !== "Investigator"
+            ? query.data.name
+            : user?.name || query.data.name || "Investigator",
+      }
+    : user;
 
   return {
-    user: query.data ?? user,
+    user: resolvedUser,
     isLoading: query.isLoading,
     error: query.error,
     refetch: query.refetch,

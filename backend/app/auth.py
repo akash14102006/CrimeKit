@@ -119,6 +119,41 @@ def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(
     return user
 
 
+def _extract_display_name(payload: dict) -> str | None:
+    """Extract display name from Google / Descope profile claims.
+
+    Precedence:
+    1. payload.name (full profile name from Google/Descope, e.g. "Akash M")
+    2. given_name + family_name / firstName + lastName
+    3. given_name / firstName
+    4. family_name / lastName
+    5. None (caller will fallback to email only as final fallback)
+    """
+    raw_name = (payload.get('name') or payload.get('displayName') or '').strip()
+    if raw_name and '@' not in raw_name:
+        return raw_name
+
+    given = (payload.get('given_name') or payload.get('givenName') or payload.get('firstName') or '').strip()
+    family = (payload.get('family_name') or payload.get('familyName') or payload.get('lastName') or '').strip()
+    if given and family:
+        return f"{given} {family}"
+    if given:
+        return given
+    if family:
+        return family
+
+    custom = payload.get('customAttributes') or {}
+    if isinstance(custom, dict) and custom.get('name'):
+        custom_name = str(custom['name']).strip()
+        if custom_name and '@' not in custom_name:
+            return custom_name
+
+    if raw_name:
+        return raw_name
+
+    return None
+
+
 def _sync_descope_user(db: Session, payload: dict) -> models.User:
     """
     Create or update a local user record from Descope JWT claims.
@@ -131,6 +166,7 @@ def _sync_descope_user(db: Session, payload: dict) -> models.User:
         email = user_id
     effective_email = email or (f"{user_id}@descope.local" if user_id else None)
     descope_roles = payload.get('roles', [])
+    display_name = _extract_display_name(payload)
 
     privileged_staff = {"admin", "investigator", "analyst", "evidence_officer", "compliance_officer", "auditor"}
 
@@ -145,8 +181,14 @@ def _sync_descope_user(db: Session, payload: dict) -> models.User:
 
     if user:
         # Update existing user identity if needed
+        updated = False
         if email and user.email != email:
             user.email = email
+            updated = True
+        if display_name and hasattr(user, 'name') and user.name != display_name:
+            user.name = display_name
+            updated = True
+        if updated:
             db.commit()
             db.refresh(user)
 
@@ -171,6 +213,7 @@ def _sync_descope_user(db: Session, payload: dict) -> models.User:
         # Create new user record
         user = models.User(
             email=effective_email or f"{user_id}@descope.local",
+            name=display_name,
             password_hash="",
             is_active=True,
         )
@@ -386,7 +429,7 @@ def login(payload: dict, db: Session = Depends(get_db)):
         "user": {
             "id": user.id,
             "email": user.email,
-            "name": user.email.split("@")[0] if user.email else "Investigator",
+            "name": getattr(user, "name", None) or user.email or "Investigator",
             "role": primary_role,
             "roles": normalized_roles,
             "permissions": permissions,
@@ -454,7 +497,7 @@ def get_me(current_user: models.User = Depends(get_current_user)):
     return {
         "id": current_user.id,
         "email": current_user.email,
-        "name": current_user.email.split('@')[0] if current_user.email else "Investigator",
+        "name": getattr(current_user, "name", None) or current_user.email or "Investigator",
         "role": primary_role,
         "roles": normalized_roles,
         "permissions": permissions,

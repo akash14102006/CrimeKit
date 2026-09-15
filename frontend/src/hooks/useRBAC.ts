@@ -20,8 +20,14 @@ import type { Permission } from "@/types/auth";
 export function useRBAC() {
   const user = useAuthStore((s) => s.user);
 
-  const role = user?.role ?? "viewer";
-  const roles = user?.roles ?? [role];
+  const rawRole = user?.role ?? "jury_evaluator";
+  const rawRoles = user?.roles ?? [rawRole];
+  const roles = rawRoles.map((r) => {
+    const s = String(r).toLowerCase().trim();
+    if (s === "viewer" || s === "user" || s === "demo_evaluator") return "jury_evaluator";
+    return s;
+  });
+  const role = roles[0] ?? "jury_evaluator";
   const permissions = (user?.permissions ?? []) as Permission[];
 
   const hasPermission = (permission: Permission): boolean => {
