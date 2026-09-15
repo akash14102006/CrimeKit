@@ -32,18 +32,11 @@ interface AuthState {
 export const useAuthStore = create<AuthState>()(
   persist(
     (set) => ({
-      user: {
-        id: "lead-investigator-01",
-        email: "lead.investigator@crimekit.gov",
-        name: "Director A. Vance",
-        roles: ["admin", "investigator", "analyst", "viewer"],
-        organization_id: "org-fed-cyber-01",
-        created_at: "2026-01-15T08:00:00Z",
-      },
-      sessionToken: "crimekit-enterprise-token",
-      refreshToken: "crimekit-refresh-token",
-      isAuthenticated: true,
-      sessionResolved: true,
+      user: null,
+      sessionToken: null,
+      refreshToken: null,
+      isAuthenticated: false,
+      sessionResolved: false,
 
       setSession: (sessionToken, refreshToken) =>
         set({
@@ -60,10 +53,28 @@ export const useAuthStore = create<AuthState>()(
           sessionToken: null,
           refreshToken: null,
           isAuthenticated: false,
+          sessionResolved: true,
         });
         if (typeof window !== "undefined") {
-          localStorage.removeItem("crimekit-ds-session");
-          localStorage.removeItem("crimekit-ds-refresh");
+          try {
+            localStorage.removeItem("crimekit-auth");
+            localStorage.removeItem("crimekit-ds-session");
+            localStorage.removeItem("crimekit-ds-refresh");
+            localStorage.removeItem("crimekit-session");
+            localStorage.removeItem("crimekit_user");
+            sessionStorage.clear();
+
+            // Clear cookies
+            document.cookie.split(";").forEach((cookie) => {
+              const eqPos = cookie.indexOf("=");
+              const name = eqPos > -1 ? cookie.substr(0, eqPos).trim() : cookie.trim();
+              document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/;`;
+              document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/;domain=${window.location.hostname};`;
+            });
+          } catch {
+            // ignore storage errors
+          }
+
           // Clear React Query cache to prevent stale data from previous session
           try {
             const w = window as unknown as Record<string, unknown>;

@@ -5,7 +5,10 @@ from datetime import datetime
 
 
 class CaseStatus(str, Enum):
+    OPEN = "open"
     ACTIVE = "active"
+    REVIEW = "review"
+    IN_REVIEW = "in_review"
     CLOSED = "closed"
     ARCHIVED = "archived"
     PENDING = "pending"

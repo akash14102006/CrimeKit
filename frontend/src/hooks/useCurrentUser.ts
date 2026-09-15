@@ -33,12 +33,15 @@ export function useCurrentUser() {
     },
   });
 
-  // Sync the fetched profile back to the auth store, preserving rich display names.
+  // Sync the fetched profile back to the auth store, preserving rich display names for the current user.
   useEffect(() => {
     if (query.data) {
-      const existingName = user?.name?.trim();
+      const email = (query.data.email || "").toLowerCase().trim();
+      const userEmail = (user?.email || "").toLowerCase().trim();
+      const isSameUser = !userEmail || userEmail === email || user?.id === query.data.id;
+
+      const existingName = isSameUser ? user?.name?.trim() : undefined;
       const backendName = query.data.name?.trim();
-      const email = query.data.email || user?.email || "";
       const emailPrefix = email.includes("@") ? email.split("@")[0].toLowerCase() : "";
 
       const isGoodName = (n: string | undefined): boolean =>
@@ -47,8 +50,8 @@ export function useCurrentUser() {
       let resolvedName = backendName;
       if (!isGoodName(backendName) && isGoodName(existingName)) {
         resolvedName = existingName;
-      } else if (!resolvedName) {
-        resolvedName = existingName || email || "Investigator";
+      } else if (!resolvedName || !isGoodName(resolvedName)) {
+        resolvedName = (isGoodName(existingName) ? existingName : undefined) || backendName || email || "Investigator";
       }
 
       setUser({
@@ -56,7 +59,11 @@ export function useCurrentUser() {
         name: resolvedName,
       });
     }
-  }, [query.data, setUser, user?.name, user?.email]);
+  }, [query.data, setUser, user?.name, user?.email, user?.id]);
+
+  const email = (query.data?.email || "").toLowerCase().trim();
+  const userEmail = (user?.email || "").toLowerCase().trim();
+  const isSameUser = !userEmail || userEmail === email || user?.id === query.data?.id;
 
   const resolvedUser = query.data
     ? {
@@ -64,7 +71,7 @@ export function useCurrentUser() {
         name:
           query.data.name && !query.data.name.includes("@") && query.data.name !== "Investigator"
             ? query.data.name
-            : user?.name || query.data.name || "Investigator",
+            : (isSameUser ? user?.name : undefined) || query.data.name || "Investigator",
       }
     : user;
 

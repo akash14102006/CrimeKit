@@ -44,11 +44,13 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         csp = os.getenv(
             "CONTENT_SECURITY_POLICY",
             "default-src 'self'; "
-            "script-src 'self' 'unsafe-inline' 'unsafe-eval'; "
-            "style-src 'self' 'unsafe-inline'; "
-            "img-src 'self' data: blob:; "
-            "font-src 'self' data:; "
+            "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://auth.descope.com; "
+            "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
+            "img-src 'self' data: blob: https:; "
+            "font-src 'self' data: https://fonts.gstatic.com; "
             "connect-src 'self' "
+            "https://crimekit-web.onslate.in https://pehchan-302-crimekit.onslate.in https://152-67-28-35.sslip.io "
+            "https://api.descope.com https://auth.descope.com "
             "http://localhost:3000 http://localhost:3001 http://localhost:8000 http://localhost:8002 "
             "http://127.0.0.1:3000 http://127.0.0.1:3001 http://127.0.0.1:8000 http://127.0.0.1:8002 "
             "ws://localhost:3000 ws://localhost:3001 "

@@ -135,6 +135,19 @@ def delete_case(db: Session, case_id: str):
     db.query(models.Evidence).filter(models.Evidence.case_id == case_id).update(
         {models.Evidence.case_id: None}
     )
+    # Clean up any child records referencing this case to satisfy PostgreSQL foreign key constraints
+    from sqlalchemy import text
+    for tbl in [
+        "upload_sessions",
+        "evidence_commitments",
+        "legal_holds",
+        "case_exports",
+        "reports",
+    ]:
+        try:
+            db.execute(text(f"DELETE FROM {tbl} WHERE case_id = :cid"), {"cid": case_id})
+        except Exception:
+            pass
     db.delete(c)
     db.commit()
     return True

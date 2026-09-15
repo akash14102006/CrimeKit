@@ -605,12 +605,24 @@ def delete_evidence(
     db.query(models.ForensicResult).filter(models.ForensicResult.evidence_id == evidence_id).delete()
     db.query(models.ForensicJob).filter(models.ForensicJob.evidence_id == evidence_id).delete()
 
-    # 6b. Remove related evidence exports
-    try:
-        from .compliance import EvidenceExport
-        db.query(EvidenceExport).filter(EvidenceExport.evidence_id == evidence_id).delete()
-    except Exception:
-        pass
+    # 6b. Remove chain of custody, blockchain commitments, compliance locks, and other referencing tables
+    # (Required for PostgreSQL foreign key constraints ON DELETE NO ACTION)
+    from sqlalchemy import text
+    for tbl in [
+        "chain_of_custody",
+        "evidence_commitments",
+        "merkle_leaves",
+        "artifact_commitments",
+        "custody_commitments",
+        "verification_requests",
+        "immutable_evidence_locks",
+        "legal_holds",
+        "evidence_exports",
+    ]:
+        try:
+            db.execute(text(f"DELETE FROM {tbl} WHERE evidence_id = :eid"), {"eid": evidence_id})
+        except Exception:
+            pass
 
     # 7. Delete evidence record
     db.delete(ev)

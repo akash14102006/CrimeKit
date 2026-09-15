@@ -50,6 +50,20 @@ const flushRefreshSubscribers = (token: string | null) => {
 const isAuthEndpoint = (url?: string) =>
   typeof url === "string" && url.includes("/auth/");
 
+let lastNetworkToastTime = 0;
+function throttleNetworkToast() {
+  const now = Date.now();
+  if (now - lastNetworkToastTime > 6000) {
+    lastNetworkToastTime = now;
+    toast.add({
+      title: "Network Error",
+      description:
+        "Could not connect to the server. Please check that the backend is running.",
+      type: "error",
+    });
+  }
+}
+
 /**
  * Response interceptor — handle 401 with Descope session refresh.
  *
@@ -169,19 +183,24 @@ apiClient.interceptors.response.use(
         });
       }
     } else if (error.request) {
-      // Distinguish between actual network failures and request timeouts / aborts.
+      // Distinguish between actual network failures and request timeouts / aborts / canceled requests.
       const isTimeout = error.code === "ECONNABORTED" || error.message?.includes("timeout");
       const isParseError =
         error.code === "ERR_BAD_RESPONSE" ||
         error.code === "ERR_PARSE_RESPONSE";
-      const isAbort = error.code === "ERR_CANCELED";
-      if (!isParseError && !isTimeout && !isAbort) {
-        toast.add({
-          title: "Network Error",
-          description:
-            "Could not connect to the server. Please check that the backend is running.",
-          type: "error",
-        });
+      const isAbort =
+        axios.isCancel(error) ||
+        error.code === "ERR_CANCELED" ||
+        error.name === "CanceledError" ||
+        error.name === "AbortError" ||
+        Boolean(originalRequest?.signal?.aborted);
+
+      const isWindowNavigating =
+        typeof window !== "undefined" &&
+        (!window.navigator.onLine || window.location.pathname === "/login");
+
+      if (!isParseError && !isTimeout && !isAbort && !isWindowNavigating) {
+        throttleNetworkToast();
       }
     }
 

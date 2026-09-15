@@ -74,12 +74,15 @@ if not _cors_origins or _cors_origins == [""] or "*" in _cors_origins:
         "http://192.168.29.240:3001",
         "http://192.168.29.240:8000",
         "http://192.168.29.240:8002",
+        "https://crimekit-web.onslate.in",
+        "https://pehchan-302-crimekit.onslate.in",
+        "https://152-67-28-35.sslip.io",
     ]
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=_cors_origins,
-    allow_origin_regex=r"https?://([a-zA-Z0-9-]+\.)*(catalystserverless\.in|catalystappsail\.in|localhost|127\.0\.0\.1|192\.168\.\d+\.\d+)(:\d+)?",
+    allow_origin_regex=r"https?://([a-zA-Z0-9-]+\.)*(catalystserverless\.in|catalystappsail\.in|onslate\.in|sslip\.io|localhost|127\.0\.0\.1|192\.168\.\d+\.\d+)(:\d+)?",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

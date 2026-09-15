@@ -48,7 +48,7 @@ def list_cases(
 
 
 @router.get('/{case_id}', response_model=schemas.CaseOut)
-def get_case(case_id: str, db: Session = Depends(get_db), _: models.User = Depends(role_required(['user', 'investigator', 'admin']))):
+def get_case(case_id: str, db: Session = Depends(get_db), _: models.User = Depends(role_required(['user', 'investigator', 'admin', 'jury_evaluator']))):
     c = crud.get_case(db, case_id)
     if not c:
         raise HTTPException(status_code=404, detail='case not found')
@@ -56,7 +56,7 @@ def get_case(case_id: str, db: Session = Depends(get_db), _: models.User = Depen
 
 
 @router.put('/{case_id}', response_model=schemas.CaseOut)
-def update_case(case_id: str, payload: schemas.CaseUpdate, db: Session = Depends(get_db), _: models.User = Depends(role_required(['investigator', 'admin']))):
+def update_case(case_id: str, payload: schemas.CaseUpdate, db: Session = Depends(get_db), _: models.User = Depends(role_required(['investigator', 'admin', 'jury_evaluator']))):
     c = crud.update_case(
         db, case_id,
         title=payload.title,
@@ -71,7 +71,7 @@ def update_case(case_id: str, payload: schemas.CaseUpdate, db: Session = Depends
 
 
 @router.patch('/{case_id}', response_model=schemas.CaseOut)
-def patch_case(case_id: str, payload: schemas.CaseUpdate, db: Session = Depends(get_db), _: models.User = Depends(role_required(['user', 'investigator', 'admin']))):
+def patch_case(case_id: str, payload: schemas.CaseUpdate, db: Session = Depends(get_db), _: models.User = Depends(role_required(['user', 'investigator', 'admin', 'jury_evaluator']))):
     """Partial update — only sent fields are modified."""
     update_fields = payload.dict(exclude_unset=True, exclude_none=True)
     if not update_fields:
@@ -83,7 +83,7 @@ def patch_case(case_id: str, payload: schemas.CaseUpdate, db: Session = Depends(
 
 
 @router.patch('/{case_id}/assign', response_model=schemas.CaseOut)
-def assign_case(case_id: str, payload: schemas.CaseUpdate, db: Session = Depends(get_db), _: models.User = Depends(role_required(['investigator', 'admin']))):
+def assign_case(case_id: str, payload: schemas.CaseUpdate, db: Session = Depends(get_db), _: models.User = Depends(role_required(['investigator', 'admin', 'jury_evaluator']))):
     c = crud.assign_case(db, case_id, payload.assigned_to)
     if not c:
         raise HTTPException(status_code=404, detail='case not found')

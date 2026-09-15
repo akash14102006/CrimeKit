@@ -3,13 +3,19 @@
 import { useUserProfile } from "../hooks/useSettings";
 import { ROLES, ROLE_LABELS } from "@/constants/roles";
 import type { RoleName } from "@/types/auth";
-import { User, Mail, Shield, Building2, Clock } from "lucide-react";
+import { User, Mail, Shield, Building2, Clock, RotateCcw, AlertCircle } from "lucide-react";
 import { getUserInitials, getSafeDisplayName } from "@/lib/userDisplay";
+import { useAuthStore } from "@/store/authStore";
+import { Button } from "@/components/ui/button";
+import { getErrorMessage } from "@/lib/api-client";
 
 export function ProfilePanel() {
-  const { data: profile, isLoading } = useUserProfile();
+  const { data: profileData, isLoading, error, refetch } = useUserProfile();
+  const { user: authUser } = useAuthStore();
 
-  if (isLoading) {
+  const profile = profileData || authUser;
+
+  if (isLoading && !profile) {
     return (
       <div className="space-y-4">
         <div className="h-8 w-48 animate-pulse rounded bg-muted" />
@@ -20,8 +26,23 @@ export function ProfilePanel() {
 
   if (!profile) {
     return (
-      <div className="flex h-32 items-center justify-center rounded-lg border border-dashed">
-        <p className="text-sm text-muted-foreground">Unable to load profile</p>
+      <div className="rounded-lg border border-destructive/20 bg-destructive/5 p-8 text-center space-y-4">
+        <AlertCircle className="h-8 w-8 text-destructive mx-auto" />
+        <div>
+          <h3 className="text-sm font-semibold text-destructive">Unable to Load Profile</h3>
+          <p className="text-xs text-muted-foreground mt-1">
+            {error ? getErrorMessage(error, "Failed to connect to profile service.") : "Profile data is currently unavailable."}
+          </p>
+        </div>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => refetch()}
+          className="inline-flex items-center gap-2"
+        >
+          <RotateCcw className="h-3.5 w-3.5" />
+          <span>Retry</span>
+        </Button>
       </div>
     );
   }

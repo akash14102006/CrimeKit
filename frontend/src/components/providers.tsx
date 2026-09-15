@@ -10,6 +10,9 @@ import { DescopeProviderWrapper } from "@/components/auth/DescopeProviderWrapper
 import { DescopeErrorBoundary } from "@/components/auth/DescopeErrorBoundary";
 
 const queryClient = new QueryClient(queryDefaults);
+if (typeof window !== "undefined") {
+  (window as unknown as Record<string, unknown>).__queryClient = queryClient;
+}
 
 import { useAuthSession } from "@/hooks/useAuthSession";
 import { useDescopeSessionSync } from "@/hooks/useDescopeSessionSync";
