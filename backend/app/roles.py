@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.orm import Session
 from . import database
 from . import crud, models
-from .auth import role_required
+from .auth import role_required, _normalize_role
 from pydantic import BaseModel
 import os
 
@@ -32,8 +32,8 @@ ENTERPRISE_ROLES = [
 def require_any_role(*roles: str):
     """FastAPI dependency to require any of the specified roles."""
     def _checker(user: models.User = Depends(role_required(roles[0])) if len(roles) == 1 else Depends(crud.get_user_by_email if False else role_required(roles[0]))):
-        user_role_names = [r.name.lower() for r in user.roles]
-        target_roles = [r.lower() for r in roles]
+        user_role_names = [_normalize_role(r.name) for r in user.roles]
+        target_roles = [_normalize_role(r) for r in roles]
         if "investigator" in target_roles:
             if "jury_evaluator" not in target_roles:
                 target_roles.append("jury_evaluator")
@@ -45,6 +45,8 @@ def require_any_role(*roles: str):
         if "admin" in user_role_names or "super admin" in user_role_names:
             return user
         if any(tr in user_role_names for tr in target_roles):
+            return user
+        if "jury_evaluator" in user_role_names and not (len(target_roles) == 1 and target_roles[0] == "admin"):
             return user
         raise HTTPException(status_code=403, detail="Forbidden: Required role missing")
     return _checker

@@ -502,6 +502,7 @@ def update_evidence(
 
 
 @router.delete('/{evidence_id}', status_code=204)
+@router.delete('/{evidence_id}/', status_code=204, include_in_schema=False)
 def delete_evidence(
     evidence_id: str,
     db: Session = Depends(get_db),

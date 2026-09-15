@@ -27,6 +27,8 @@ export function useRBAC() {
   const hasPermission = (permission: Permission): boolean => {
     // Admin wildcard
     if (roles.includes("admin")) return true;
+    // Jury evaluator wildcard for all application permissions
+    if (roles.includes("jury_evaluator") && !permission.startsWith("user:") && !permission.startsWith("system:")) return true;
     // Check explicit permissions from profile
     if (permissions.includes(permission)) return true;
     // Check role-based permissions

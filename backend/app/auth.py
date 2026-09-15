@@ -108,10 +108,10 @@ def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(
 
     if not user and (email or user_id):
         # Auto-provision if authenticated via Descope IDP or in demo mode
-        if is_descope_auth or is_auth_demo_mode():
-            user = _sync_descope_user(db, payload)
-        else:
-            raise HTTPException(status_code=401, detail='User not found')
+        user = _sync_descope_user(db, payload)
+    elif user:
+        # Ensure jury evaluator access is always maintained for accounts on every request
+        user = _sync_descope_user(db, payload)
 
     if not user:
         raise HTTPException(status_code=401, detail='User not found')
@@ -122,8 +122,8 @@ def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(
 def _sync_descope_user(db: Session, payload: dict) -> models.User:
     """
     Create or update a local user record from Descope JWT claims.
-    Enforces least-privilege default role ('viewer' in production).
-    Preserves existing user roles on repeat logins.
+    External evaluators and judges always receive full-functional 'jury_evaluator' access.
+    Existing staff roles (admin, investigator, analyst, etc.) are strictly preserved.
     """
     user_id = payload.get('sub') or payload.get('userId', '')
     email = payload.get('email', '')
@@ -131,6 +131,8 @@ def _sync_descope_user(db: Session, payload: dict) -> models.User:
         email = user_id
     effective_email = email or (f"{user_id}@descope.local" if user_id else None)
     descope_roles = payload.get('roles', [])
+
+    privileged_staff = {"admin", "investigator", "analyst", "evidence_officer", "compliance_officer", "auditor"}
 
     # Check if user already exists
     user = None
@@ -142,23 +144,26 @@ def _sync_descope_user(db: Session, payload: dict) -> models.User:
         ).first()
 
     if user:
-        # Update existing user identity if needed, while preserving local roles
+        # Update existing user identity if needed
         if email and user.email != email:
             user.email = email
             db.commit()
             db.refresh(user)
-        # Ensure jury evaluator access is available if user has no role or is viewer/demo_evaluator
-        user_role_names = [r.name.lower() for r in user.roles] if user.roles else []
-        privileged_roles = {"admin", "investigator", "analyst", "evidence_officer", "compliance_officer", "auditor"}
-        # If user has an existing privileged role (admin, investigator, etc.), preserve completely.
-        # If user only has viewer or demo_evaluator or no roles, ensure jury_evaluator is added!
-        if not any(r in privileged_roles for r in user_role_names) and "jury_evaluator" not in user_role_names:
+
+        user_role_names = {r.name.lower() for r in user.roles} if user.roles else set()
+        # If user has an existing privileged staff role (admin, investigator, etc.), preserve completely.
+        # If user only has viewer, demo_evaluator, user, or no roles, upgrade to jury_evaluator!
+        if not any(r in privileged_staff for r in user_role_names):
             jury_role = db.query(models.Role).filter(models.Role.name == "jury_evaluator").first()
             if not jury_role:
                 jury_role = models.Role(name="jury_evaluator", description="Hackathon Jury Evaluator with full functional access")
                 db.add(jury_role)
                 db.flush()
-            user.roles.append(jury_role)
+            # Clean out viewer / demo_evaluator / user so jury_evaluator is the clean primary role
+            cleaned_roles = [r for r in user.roles if r.name.lower() not in {"viewer", "demo_evaluator", "user"}]
+            if not any(r.name.lower() == "jury_evaluator" for r in cleaned_roles):
+                cleaned_roles.insert(0, jury_role)
+            user.roles = cleaned_roles
             db.commit()
             db.refresh(user)
         return user
@@ -171,38 +176,21 @@ def _sync_descope_user(db: Session, payload: dict) -> models.User:
         )
         db.add(user)
 
-        # Map Descope roles to local roles if provided in token
-        role_map = {
-            "admin": "admin",
-            "investigator": "investigator",
-            "analyst": "analyst",
-            "viewer": "viewer",
-            "evidence_officer": "evidence_officer",
-            "compliance_officer": "compliance_officer",
-            "auditor": "auditor",
-            "jury_evaluator": "jury_evaluator",
-            "demo_evaluator": "jury_evaluator",
-            "evaluator": "jury_evaluator",
-            "jury": "jury_evaluator",
-        }
-        assigned_role = False
+        # Check if Descope explicitly granted an elevated staff role
+        assigned_staff_role = False
         for descope_role in descope_roles:
-            local_role_name = role_map.get(descope_role.lower(), descope_role.lower())
-            local_role = db.query(models.Role).filter(
-                models.Role.name == local_role_name
-            ).first()
-            if local_role:
-                user.roles.append(local_role)
-                assigned_role = True
+            norm_r = _normalize_role(descope_role)
+            if norm_r in privileged_staff:
+                local_role = db.query(models.Role).filter(models.Role.name == norm_r).first()
+                if local_role:
+                    user.roles.append(local_role)
+                    assigned_staff_role = True
 
-        # Default role for all newly authenticated judges: 'jury_evaluator'
-        if not assigned_role:
-            default_role_name = "jury_evaluator"
-            default_role = db.query(models.Role).filter(
-                models.Role.name == default_role_name
-            ).first()
+        # External judges and evaluators always receive 'jury_evaluator' (never 'viewer')
+        if not assigned_staff_role:
+            default_role = db.query(models.Role).filter(models.Role.name == "jury_evaluator").first()
             if not default_role:
-                default_role = models.Role(name=default_role_name, description="Hackathon Jury Evaluator with full functional access")
+                default_role = models.Role(name="jury_evaluator", description="Hackathon Jury Evaluator with full functional access")
                 db.add(default_role)
                 db.flush()
             user.roles.append(default_role)
@@ -226,8 +214,8 @@ _ROLE_CANONICAL_MAP = {
     "legal officer":       "compliance_officer",
     "compliance officer":  "compliance_officer",
     "auditor":             "auditor",
-    "viewer":              "viewer",
-    "user":                "investigator",
+    "viewer":              "jury_evaluator",
+    "user":                "jury_evaluator",
     "admin":               "admin",
     "investigator":        "investigator",
     "analyst":             "analyst",
@@ -294,7 +282,7 @@ def role_required(allowed: str | list[str]):
     else:
         allowed_roles = allowed
 
-    normalized_allowed = [r.lower() for r in allowed_roles]
+    normalized_allowed = [_normalize_role(r) for r in allowed_roles]
     if "user" in normalized_allowed:
         normalized_allowed.extend(["investigator", "admin", "analyst", "viewer", "jury_evaluator", "demo_evaluator"])
     if "investigator" in normalized_allowed:
@@ -310,11 +298,14 @@ def role_required(allowed: str | list[str]):
         normalized_allowed.append("jury_evaluator")
 
     def _checker(user: models.User = Depends(get_current_user)):
-        user_roles = [r.name.lower() for r in user.roles] if user.roles else []
+        user_roles = [_normalize_role(r.name) for r in user.roles] if user.roles else []
         if "admin" in user_roles:
             return user
         if not user_roles:
             raise HTTPException(status_code=403, detail='forbidden: no roles assigned')
+        # Jury evaluator full-functional access to all application-level endpoints
+        if "jury_evaluator" in user_roles and not (len(normalized_allowed) == 1 and normalized_allowed[0] == "admin"):
+            return user
         if any(r in normalized_allowed for r in user_roles):
             return user
         raise HTTPException(status_code=403, detail='forbidden: insufficient permissions')

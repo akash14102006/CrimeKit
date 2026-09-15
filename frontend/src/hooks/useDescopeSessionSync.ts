@@ -32,7 +32,11 @@ export function useDescopeSessionSync() {
         const descopeRoles = (descopeUser as Record<string, unknown>).roles;
         const defaultRole = "jury_evaluator";
         const roles: string[] = Array.isArray(descopeRoles) && descopeRoles.length > 0
-          ? descopeRoles.map((r: unknown) => String(r).toLowerCase())
+          ? descopeRoles.map((r: unknown) => {
+              const str = String(r).toLowerCase().trim();
+              if (str === "viewer" || str === "user" || str === "demo_evaluator") return "jury_evaluator";
+              return str;
+            })
           : [defaultRole];
         const primaryRole = roles[0] ?? defaultRole;
         setUser({
