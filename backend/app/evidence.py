@@ -254,6 +254,28 @@ def get_evidence_ocr(evidence_id: str, db: Session = Depends(get_db), current_us
     }
 
 
+@router.get('/{evidence_id}/forensic-jobs')
+def get_evidence_forensic_jobs(evidence_id: str, db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
+    ev = db.query(models.Evidence).filter(models.Evidence.id == evidence_id).first()
+    if not ev:
+        raise HTTPException(status_code=404, detail='evidence not found')
+    jobs = db.query(models.ForensicJob).filter(models.ForensicJob.evidence_id == evidence_id).order_by(models.ForensicJob.queued_at.desc()).all()
+    return [
+        {
+            'id': j.id,
+            'evidence_id': j.evidence_id,
+            'processors': j.processors,
+            'status': j.status,
+            'queued_at': j.queued_at.isoformat() if j.queued_at else None,
+            'started_at': j.started_at.isoformat() if j.started_at else None,
+            'finished_at': j.finished_at.isoformat() if j.finished_at else None,
+            'result': j.result,
+            'error': j.error,
+        }
+        for j in jobs
+    ]
+
+
 @router.get('/case/{case_id}')
 def list_case_evidence(case_id: str, db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
     items = db.query(models.Evidence).filter(models.Evidence.case_id == case_id).all()
@@ -508,6 +530,10 @@ def delete_evidence(
     db: Session = Depends(get_db),
     current_user: models.User = Depends(role_required(['investigator', 'admin', 'jury_evaluator'])),
 ):
+    user_roles = [r.name for r in current_user.roles] if current_user.roles else []
+    if "admin" not in user_roles and "investigator" not in user_roles and "jury_evaluator" not in user_roles:
+        raise HTTPException(status_code=403, detail="forbidden: destructive evidence deletion not permitted")
+
     ev = db.query(models.Evidence).filter(models.Evidence.id == evidence_id).first()
     if not ev:
         raise HTTPException(status_code=404, detail='evidence not found')
@@ -605,11 +631,10 @@ def delete_evidence(
     db.query(models.ForensicResult).filter(models.ForensicResult.evidence_id == evidence_id).delete()
     db.query(models.ForensicJob).filter(models.ForensicJob.evidence_id == evidence_id).delete()
 
-    # 6b. Remove chain of custody, blockchain commitments, compliance locks, and other referencing tables
-    # (Required for PostgreSQL foreign key constraints ON DELETE NO ACTION)
+    # 6b. Remove blockchain commitments, compliance locks, and other referencing tables
+    # Note: chain_of_custody audit records are strictly preserved for non-repudiation integrity
     from sqlalchemy import text
     for tbl in [
-        "chain_of_custody",
         "evidence_commitments",
         "merkle_leaves",
         "artifact_commitments",

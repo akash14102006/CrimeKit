@@ -28,7 +28,7 @@ interface VerificationStep {
   label: string;
   description: string;
   passed: boolean | null;
-  icon: React.ElementType;
+  icon: React.ComponentType<{ className?: string }>;
 }
 
 export function VerificationReport({ evidenceId }: Props) {
@@ -142,7 +142,7 @@ export function VerificationReport({ evidenceId }: Props) {
         ) : (
           <div className="space-y-1">
             {steps.map((step, index) => {
-              const StepIcon = step.icon;
+              const StepIcon = step.icon || ShieldCheck;
               return (
                 <div
                   key={step.label}

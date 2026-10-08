@@ -46,7 +46,7 @@ def get_db():
 
 def _require_admin(current_user: models.User):
     roles = [r.name.lower() for r in current_user.roles] if current_user.roles else []
-    if "admin" not in roles and "jury_evaluator" not in roles and "demo_evaluator" not in roles:
+    if "admin" not in roles:
         raise HTTPException(status_code=403, detail="forbidden: admin required")
 
 def _require_admin_or_investigator(current_user: models.User):

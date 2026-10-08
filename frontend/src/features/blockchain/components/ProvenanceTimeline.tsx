@@ -20,7 +20,7 @@ interface Props {
   evidenceId: string;
 }
 
-const stepIcons: Record<string, React.ElementType> = {
+const stepIcons: Record<string, React.ComponentType<{ className?: string }>> = {
   upload: Upload,
   upload_hash: Upload,
   processing: Cpu,

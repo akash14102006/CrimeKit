@@ -1,18 +1,23 @@
 "use client";
 
-import { useEffect, useMemo } from "react";
-import { useParams } from "next/navigation";
+import { useEffect, useMemo, useState } from "react";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { ReactFlowProvider } from "@xyflow/react";
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
 import { useCaseKnowledgeGraph } from "@/hooks/queries/useKnowledgeGraph";
 import { useGraphStore } from "../store/graphStore";
 import { useGraphWebSocket } from "../hooks/useGraphWebSocket";
 import { GraphToolbar } from "./GraphToolbar";
+import { Graph3DViewer } from "./Graph3DViewer";
 import { InteractiveGraph } from "./InteractiveGraph";
-import { NodeDetailsPanel } from "./NodeDetailsPanel";
+import { ForensicInspectorPanel } from "./ForensicInspectorPanel";
 import { EdgeDetailsPanel } from "./EdgeDetailsPanel";
+import { GraphGDSPanel } from "./GraphGDSPanel";
 import { GraphLegend } from "./GraphLegend";
-import { GraphAnalytics } from "./GraphAnalytics";
+import { CaseAtlas } from "./CaseAtlas";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { FolderLock, ArrowLeft } from "lucide-react";
 import type { GraphNode, GraphEdge } from "@/types/kg";
 
 interface Props {
@@ -28,11 +33,12 @@ function GraphContent({ caseId }: { caseId: string }) {
     selectedEdgeId,
     selectNode,
     selectEdge,
-    showAnalytics,
+    viewMode,
     setGraphData,
     pendingEvents,
   } = useGraphStore();
 
+  const [showGDSPanel, setShowGDSPanel] = useState<boolean>(false);
   const { isConnected: wsConnected } = useGraphWebSocket(caseId);
 
   // Parse API response and populate store
@@ -66,7 +72,7 @@ function GraphContent({ caseId }: { caseId: string }) {
     return [];
   }, [kgData]);
 
-  // Sync API data into store (only when store is empty or API data is newer)
+  // Sync API data into store
   useEffect(() => {
     if (apiNodes.length > 0 || apiEdges.length > 0) {
       setGraphData(apiNodes, apiEdges);
@@ -87,11 +93,12 @@ function GraphContent({ caseId }: { caseId: string }) {
     [allEdges, selectedEdgeId],
   );
 
-  const hasDetail = selectedNode || selectedEdge;
+  const hasDetailPanel = Boolean(selectedNode || selectedEdge || showGDSPanel);
 
   return (
-    <div className="flex flex-col h-full">
-      <div className="px-4 py-2 border-b">
+    <div className="flex flex-col h-full bg-background text-foreground">
+      {/* Graph Toolbar */}
+      <div className="px-3 py-1.5 border-b border-border bg-card/80 flex items-center justify-between">
         <GraphToolbar
           nodes={allNodes}
           edges={allEdges}
@@ -100,60 +107,60 @@ function GraphContent({ caseId }: { caseId: string }) {
           onZoomIn={() => {}}
           onZoomOut={() => {}}
           onFitView={() => {}}
+          onToggleGDS={() => setShowGDSPanel((prev) => !prev)}
+          showGDS={showGDSPanel}
+          wsConnected={wsConnected}
         />
-        {/* Connection status indicator */}
-        <div className="flex items-center gap-2 mt-1 text-xs">
-          <div className={`h-2 w-2 rounded-full ${wsConnected ? "bg-green-500" : "bg-red-500"}`} />
-          <span className="text-muted-foreground">
-            {wsConnected ? "Live" : "Disconnected"}
-          </span>
-          {pendingEvents > 0 && (
-            <span className="text-muted-foreground">({pendingEvents} events)</span>
-          )}
-        </div>
       </div>
 
-      <div className="px-4 py-1.5 border-b">
-        <GraphLegend />
-      </div>
-
-      <div className="flex-1 min-h-0">
+      {/* Main Canvas + Inspector Resizable Layout */}
+      <div className="flex-1 min-h-0 relative">
         <ResizablePanelGroup orientation="horizontal" className="h-full">
-          <ResizablePanel defaultSize={hasDetail ? 50 : showAnalytics ? 65 : 100} minSize={30}>
-            <InteractiveGraph
-              kgNodes={allNodes}
-              kgEdges={allEdges}
-              onNodeClick={(node) => selectNode(node.id)}
-              onEdgeClick={(edge) => selectEdge(edge.id)}
-            />
+          {/* Main Visualization Panel */}
+          <ResizablePanel defaultSize={hasDetailPanel ? 65 : 100} minSize={40}>
+            {viewMode === "3d" ? (
+              <Graph3DViewer
+                nodes={allNodes}
+                edges={allEdges}
+                onNodeClick={(node) => selectNode(node.id)}
+                onEdgeClick={(edge) => selectEdge(edge.id)}
+                caseId={caseId}
+              />
+            ) : (
+              <InteractiveGraph
+                kgNodes={allNodes}
+                kgEdges={allEdges}
+                onNodeClick={(node) => selectNode(node.id)}
+                onEdgeClick={(edge) => selectEdge(edge.id)}
+              />
+            )}
           </ResizablePanel>
 
-          {showAnalytics && (
+          {/* Side Inspector / GDS Panel */}
+          {hasDetailPanel && (
             <>
-              <ResizableHandle withHandle />
-              <ResizablePanel defaultSize={20} minSize={15} collapsible collapsedSize={0}>
-                <GraphAnalytics nodes={allNodes} edges={allEdges} />
-              </ResizablePanel>
-            </>
-          )}
-
-          {hasDetail && (
-            <>
-              <ResizableHandle withHandle />
-              <ResizablePanel defaultSize={30} minSize={20} collapsible collapsedSize={0}>
+              <ResizableHandle withHandle className="bg-border" />
+              <ResizablePanel defaultSize={35} minSize={25} collapsible collapsedSize={0}>
                 {selectedNode ? (
-                  <NodeDetailsPanel
+                  <ForensicInspectorPanel
                     node={selectedNode}
-                    edges={allEdges}
                     allNodes={allNodes}
+                    edges={allEdges}
                     onClose={() => selectNode(null)}
-                    isLoading={isLoading}
+                    caseId={caseId}
                   />
                 ) : selectedEdge ? (
                   <EdgeDetailsPanel
                     edge={selectedEdge}
                     allNodes={allNodes}
                     onClose={() => selectEdge(null)}
+                  />
+                ) : showGDSPanel ? (
+                  <GraphGDSPanel
+                    caseId={caseId}
+                    nodes={allNodes}
+                    edges={allEdges}
+                    onClose={() => setShowGDSPanel(false)}
                   />
                 ) : null}
               </ResizablePanel>
@@ -167,49 +174,80 @@ function GraphContent({ caseId }: { caseId: string }) {
 
 export function GraphPage({ caseId: propCaseId }: Props = {}) {
   const params = useParams();
-  const caseId = propCaseId ?? (params?.caseId as string);
+  const searchParams = useSearchParams();
+  const router = useRouter();
+
+  const activeCaseId =
+    propCaseId ??
+    (params?.caseId as string) ??
+    searchParams?.get("case_id") ??
+    undefined;
+
   const { setCaseId } = useGraphStore();
 
   useEffect(() => {
-    setCaseId(caseId ?? null);
-  }, [caseId, setCaseId]);
+    setCaseId(activeCaseId ?? null);
+  }, [activeCaseId, setCaseId]);
+
+  const handleSelectCase = (id: string) => {
+    setCaseId(id);
+    router.push(`/knowledge-graph?case_id=${encodeURIComponent(id)}`);
+  };
+
+  const handleSwitchCase = () => {
+    setCaseId(null);
+    router.push("/knowledge-graph");
+  };
+
+  // Clean case display title (remove raw long UUIDs from display)
+  const displayCaseName = activeCaseId
+    ? activeCaseId.includes("case_core_")
+      ? "Active Investigation"
+      : activeCaseId.length > 20
+      ? `Case #${activeCaseId.slice(0, 8)}...`
+      : `Case: ${activeCaseId}`
+    : null;
 
   return (
     <ReactFlowProvider>
-      <div className="flex flex-col h-full">
-        <div className="px-4 py-3 border-b">
-          <h1 className="text-2xl font-bold tracking-tight">Knowledge Graph</h1>
-          <p className="text-sm text-muted-foreground">
-            {caseId ? `Case-scoped entity relationship visualization` : `Select a case to view its knowledge graph`}
-          </p>
+      <div className="flex flex-col h-full bg-background text-foreground">
+        {/* Minimal Header */}
+        <div className="px-4 py-2 border-b border-border bg-card/80 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <h1 className="text-base font-bold tracking-tight text-foreground flex items-center gap-2">
+              <span>CrimeKit</span>
+              <span className="text-muted-foreground font-normal">/</span>
+              <span className="text-sky-500 font-semibold">Knowledge Graph</span>
+            </h1>
+            {displayCaseName && (
+              <Badge variant="outline" className="text-xs font-mono bg-muted/60 border-border text-foreground">
+                <FolderLock className="h-3 w-3 mr-1 text-sky-500" />
+                {displayCaseName}
+              </Badge>
+            )}
+          </div>
+
+          {activeCaseId && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-7 px-2.5 gap-1.5 border-border bg-card text-foreground hover:bg-accent text-xs"
+              onClick={handleSwitchCase}
+            >
+              <ArrowLeft className="h-3.5 w-3.5" />
+              <span>Switch Case</span>
+            </Button>
+          )}
         </div>
 
-        {caseId ? (
+        {activeCaseId ? (
           <div className="flex-1 min-h-0">
-            <GraphContent caseId={caseId} />
+            <GraphContent caseId={activeCaseId} />
           </div>
         ) : (
-          <div className="flex-1 flex items-center justify-center">
-            <div className="text-center space-y-3">
-              <Network className="h-12 w-12 mx-auto text-muted-foreground opacity-40" />
-              <p className="text-sm font-medium">No case selected</p>
-              <p className="text-xs text-muted-foreground">Navigate to a case workspace to view its knowledge graph</p>
-            </div>
-          </div>
+          <CaseAtlas onSelectCase={handleSelectCase} />
         )}
       </div>
     </ReactFlowProvider>
-  );
-}
-
-function Network(props: React.SVGProps<SVGSVGElement>) {
-  return (
-    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
-      <rect x="16" y="16" width="6" height="6" rx="1" />
-      <rect x="2" y="16" width="6" height="6" rx="1" />
-      <rect x="9" y="2" width="6" height="6" rx="1" />
-      <path d="M5 16v-3a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v3" />
-      <path d="M12 12V8" />
-    </svg>
   );
 }

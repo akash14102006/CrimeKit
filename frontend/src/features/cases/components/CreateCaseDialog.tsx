@@ -117,17 +117,17 @@ export function CreateCaseDialog({
           New Case
         </Button>
       )}
-      <DialogContent className="sm:max-w-lg bg-white dark:bg-[#0F1115] border border-gray-200 dark:border-white/10 rounded-xl shadow-xl text-gray-900 dark:text-white">
+      <DialogContent className="sm:max-w-lg bg-card border border-border rounded-xl shadow-xl text-card-foreground">
         <DialogHeader className="space-y-2">
           <div className="flex items-center gap-3">
-            <div className="p-2.5 rounded-lg bg-blue-50 dark:bg-[#4F8CFF]/15 text-[#164863] dark:text-[#4F8CFF]">
+            <div className="p-2.5 rounded-lg bg-sky-500/10 text-sky-500 border border-sky-500/20">
               <Shield className="h-5 w-5" />
             </div>
             <div>
-              <DialogTitle className="text-xl font-bold text-gray-900 dark:text-white">
+              <DialogTitle className="text-xl font-bold text-foreground">
                 Open New Case
               </DialogTitle>
-              <DialogDescription className="text-xs text-gray-500 dark:text-white/60">
+              <DialogDescription className="text-xs text-muted-foreground">
                 Initialize a forensic investigation case file across cluster nodes.
               </DialogDescription>
             </div>
@@ -136,14 +136,14 @@ export function CreateCaseDialog({
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-5 mt-4">
           <div className="space-y-2">
-            <Label htmlFor="case-title" className="text-xs font-medium text-gray-600 dark:text-white/70 uppercase tracking-wider">
+            <Label htmlFor="case-title" className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
               Investigation Title *
             </Label>
             <Input
               id="case-title"
               placeholder="e.g., Incident #2026-9041 (Memory Injection)"
               {...register("title")}
-              className="h-11 bg-gray-50 dark:bg-white/[0.04] border-gray-200 dark:border-white/10 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-white/30 rounded-lg focus:border-[#164863] dark:focus:border-[#4F8CFF]"
+              className="h-10 bg-background border-border text-foreground placeholder:text-muted-foreground rounded-lg"
               aria-invalid={!!errors.title}
               aria-describedby={errors.title ? "title-error" : undefined}
             />
@@ -155,7 +155,7 @@ export function CreateCaseDialog({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="case-description" className="text-xs font-medium text-gray-600 dark:text-white/70 uppercase tracking-wider">
+            <Label htmlFor="case-description" className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
               Description & Scope
             </Label>
             <Textarea
@@ -163,7 +163,7 @@ export function CreateCaseDialog({
               placeholder="Provide context regarding affected hosts, suspicious artifacts, or compromised scope..."
               rows={4}
               {...register("description")}
-              className="bg-gray-50 dark:bg-white/[0.04] border-gray-200 dark:border-white/10 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-white/30 rounded-lg focus:border-[#164863] dark:focus:border-[#4F8CFF]"
+              className="bg-background border-border text-foreground placeholder:text-muted-foreground rounded-lg"
               aria-invalid={!!errors.description}
               aria-describedby={errors.description ? "description-error" : undefined}
             />
@@ -175,7 +175,7 @@ export function CreateCaseDialog({
           </div>
 
           <div className="space-y-2">
-            <Label className="text-xs font-medium text-gray-600 dark:text-white/70 uppercase tracking-wider">
+            <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
               Initial Priority
             </Label>
             <Select
@@ -187,11 +187,11 @@ export function CreateCaseDialog({
                   });
               }}
             >
-              <SelectTrigger className="w-full h-11 bg-gray-50 dark:bg-white/[0.04] border-gray-200 dark:border-white/10 text-gray-900 dark:text-white rounded-lg">
+              <SelectTrigger className="w-full h-10 bg-background border-border text-foreground rounded-lg">
                 <SelectValue placeholder="Select priority level" />
               </SelectTrigger>
               <SelectPositioner>
-                <SelectPopup className="bg-white dark:bg-[#0F1115] border-gray-200 dark:border-white/10 text-gray-900 dark:text-white rounded-lg">
+                <SelectPopup className="bg-popover border-border text-popover-foreground rounded-lg">
                   <SelectItem value="low">Low Priority</SelectItem>
                   <SelectItem value="medium">Medium Priority</SelectItem>
                   <SelectItem value="high">High Priority</SelectItem>
@@ -201,21 +201,21 @@ export function CreateCaseDialog({
             </Select>
           </div>
 
-          <DialogFooter className="pt-4 border-t border-gray-100 dark:border-white/10 flex items-center justify-end gap-3">
+          <DialogFooter className="pt-4 border-t border-border flex items-center justify-end gap-3">
             <Button
               type="button"
               variant="outline"
               onClick={() => setOpen(false)}
-              className="h-10 px-4 rounded-lg border-gray-200 dark:border-white/10 bg-white dark:bg-white/5 text-gray-700 dark:text-white/80 hover:bg-gray-50 dark:hover:bg-white/10"
+              className="h-9 px-4 rounded-lg border-border bg-card text-foreground hover:bg-muted"
             >
               Cancel
             </Button>
             <Button
               type="submit"
               disabled={createCase.isPending}
-              className="h-10 px-6 rounded-lg bg-[#164863] hover:bg-[#0F3550] dark:bg-[#4F8CFF] dark:hover:bg-[#3B72E6] text-white font-medium transition-colors"
+              className="h-9 px-5 rounded-lg bg-sky-600 hover:bg-sky-500 text-white font-medium transition-colors"
             >
-              {createCase.isPending ? "Initializing..." : "Create Investigation Case"}
+              {createCase.isPending ? "Initializing..." : "Create Case File"}
             </Button>
           </DialogFooter>
         </form>

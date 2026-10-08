@@ -18,6 +18,7 @@ import { useState } from "react";
 import { roleLabel } from "@/hooks/useRBAC";
 import { useDescope } from "@descope/react-sdk";
 import { getUserInitials, getSafeDisplayName } from "@/lib/userDisplay";
+import { ThemeToggle } from "./ThemeToggle";
 
 export function Header() {
   const { user, clearSession } = useAuthStore();
@@ -52,9 +53,10 @@ export function Header() {
           />
         </form>
       </div>
-      <div className="flex items-center space-x-4">
-        <Button variant="ghost" size="icon" className="relative" aria-label="Notifications">
-          <Bell className="h-5 w-5" />
+      <div className="flex items-center space-x-3">
+        <ThemeToggle />
+        <Button variant="ghost" size="icon" className="relative h-9 w-9" aria-label="Notifications">
+          <Bell className="h-4 w-4" />
           <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-destructive" />
         </Button>
         <DropdownMenu>

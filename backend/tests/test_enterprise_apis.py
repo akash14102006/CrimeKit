@@ -505,8 +505,8 @@ class TestDistributedAPI:
         token = _register_and_login(client, f"dist_qd_{uuid.uuid4().hex[:8]}@test.com")
         headers = _auth_header(token)
         r = client.get('/api/v1/distributed/queue/depth', headers=headers)
-        # get_distributed_system() is async but called sync in routes — 500 when no Redis
-        assert r.status_code in (200, 500)
+        # get_distributed_system() raises 503 or 500 when Redis is unavailable
+        assert r.status_code in (200, 500, 503)
         if r.status_code == 200:
             data = r.json()
             assert isinstance(data, dict)
@@ -518,7 +518,7 @@ class TestDistributedAPI:
         token = _register_and_login(client, f"dist_wl_{uuid.uuid4().hex[:8]}@test.com")
         headers = _auth_header(token)
         r = client.get('/api/v1/distributed/workers', headers=headers)
-        assert r.status_code in (200, 500)
+        assert r.status_code in (200, 500, 503)
         if r.status_code == 200:
             data = r.json()
             assert 'workers' in data
@@ -531,7 +531,7 @@ class TestDistributedAPI:
         token = _register_and_login(client, f"dist_met_{uuid.uuid4().hex[:8]}@test.com")
         headers = _auth_header(token)
         r = client.get('/api/v1/distributed/metrics', headers=headers)
-        assert r.status_code in (200, 500)
+        assert r.status_code in (200, 500, 503)
         if r.status_code == 200:
             data = r.json()
             assert isinstance(data, dict)
@@ -543,7 +543,7 @@ class TestDistributedAPI:
         token = _register_and_login(client, f"dist_dlq_{uuid.uuid4().hex[:8]}@test.com")
         headers = _auth_header(token)
         r = client.get('/api/v1/distributed/dlq', headers=headers)
-        assert r.status_code in (200, 500)
+        assert r.status_code in (200, 500, 503)
         if r.status_code == 200:
             data = r.json()
             assert 'items' in data

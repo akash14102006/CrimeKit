@@ -80,9 +80,9 @@ def test_p2_001_blockchain_config_importable():
 
 def test_p2_001_blockchain_routes_included(client):
     """Verify blockchain endpoints are registered on app."""
-    routes = [r.path for r in app.routes]
-    assert "/api/v1/blockchain/protocol" in routes
-    assert "/api/v1/blockchain/stats" in routes
+    paths = list(app.openapi()["paths"].keys())
+    assert "/api/v1/blockchain/protocol" in paths
+    assert "/api/v1/blockchain/stats" in paths
 
 
 # ─── P2-002: Descope First-Time User Provisioning & RBAC ────────────────────

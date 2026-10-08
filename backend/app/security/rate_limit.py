@@ -98,7 +98,7 @@ class RateLimitConfig:
         """Return (max_requests, window_sec) for a given path."""
         if "/auth/login" in path or "/auth/register" in path:
             return self.login_limit, self.login_window
-        if "/evidence/upload" in path or "/evidence" in path:
+        if "/evidence/upload" in path or "/uploads" in path:
             return self.upload_limit, self.upload_window
         if "/api/v1/search" in path:
             return self.search_limit, self.search_window

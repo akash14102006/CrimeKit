@@ -8,6 +8,7 @@ with regex fallback.
 
 import os
 import re
+import math
 import logging
 from typing import List, Dict, Any, Optional
 from datetime import datetime
@@ -25,6 +26,7 @@ from .entity_extractor import extract_entities as _ml_extract_entities
 from .entity_normalizer import normalize_entities
 from .entity_resolver import resolve_entities
 from .relationship_extractor import extract_relationships as _semantic_extract_relationships
+from .ontology import get_entity_color
 
 logger = logging.getLogger(__name__)
 
@@ -259,6 +261,60 @@ class KGClient:
                     out.append(dict(r.items()))
             return out
 
+    def init_schema(self):
+        """Ensure indexes and uniqueness constraints exist in Neo4j."""
+        constraints = [
+            "CREATE CONSTRAINT IF NOT EXISTS FOR (c:Case) REQUIRE c.id IS UNIQUE",
+            "CREATE CONSTRAINT IF NOT EXISTS FOR (e:Evidence) REQUIRE e.id IS UNIQUE",
+            "CREATE INDEX IF NOT EXISTS FOR (n:Entity) ON (n.name)",
+            "CREATE INDEX IF NOT EXISTS FOR (n:Entity) ON (n.type)",
+            "CREATE INDEX IF NOT EXISTS FOR (n:Entity) ON (n.case_id)",
+        ]
+        with self.driver.session() as s:
+            for c in constraints:
+                try:
+                    s.run(c)
+                except Exception as ex:
+                    logger.warning("Neo4j schema constraint creation notice: %s", ex)
+
+
+def compute_3d_positions(nodes: List[Dict[str, Any]], edges: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    """
+    Compute initial 3D spatial (x, y, z) coordinates for nodes
+    using spherical force layout algorithm.
+    """
+    count = len(nodes)
+    if count == 0:
+        return nodes
+
+    degrees = {n["id"]: 0 for n in nodes if "id" in n}
+    for e in edges:
+        src = e.get("source")
+        tgt = e.get("target")
+        if src in degrees:
+            degrees[src] += 1
+        if tgt in degrees:
+            degrees[tgt] += 1
+
+    radius_base = max(200, count * 25)
+    phi_golden = math.pi * (3 - math.sqrt(5))
+
+    for i, node in enumerate(nodes):
+        deg = degrees.get(node.get("id"), 0)
+        y = 1.0 - (i / float(count - 1 or 1)) * 2.0
+        radius = radius_base * (0.8 + 0.3 * math.sin(i * 0.5)) + (deg * 18.0)
+        theta = phi_golden * i
+        r_slice = math.sqrt(max(0.0, 1.0 - y * y)) * radius
+
+        node["x"] = round(r_slice * math.cos(theta), 2)
+        node["y"] = round(y * radius, 2)
+        node["z"] = round(r_slice * math.sin(theta), 2)
+        node["color"] = get_entity_color(node.get("type", "entity"))
+        node["val"] = max(5, min(35, 6 + deg * 4))
+
+    return nodes
+
 
 def get_kg_client() -> KGClient:
     return KGClient()
+

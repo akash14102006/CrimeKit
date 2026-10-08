@@ -56,10 +56,13 @@ minio/
 *.mp4
 
 # Forensic evidence / local test storage
+storage/
 backend/storage/
 backend/backend/storage/
 !/backend/app/storage/
 evidence_store/
+scratch/
+.agents/
 
 # IDEs and Editors
 .vscode/

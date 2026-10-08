@@ -62,11 +62,10 @@ print(f"     Case ID: {case_id}")
 print("\n" + "=" * 60)
 print("  STAGE 3: UPLOAD START")
 print("=" * 60)
-test_pdf = os.path.join(os.path.dirname(__file__), "test_evidence", "investigation_report.pdf")
-if not os.path.exists(test_pdf):
-    # Create a minimal test PDF
-    os.makedirs(os.path.dirname(test_pdf), exist_ok=True)
-    pdf_content = b"""%PDF-1.4
+run_id = uuid.uuid4().hex[:8]
+test_pdf = os.path.join(os.path.dirname(__file__), "test_evidence", f"investigation_report_{run_id}.pdf")
+os.makedirs(os.path.dirname(test_pdf), exist_ok=True)
+pdf_content = f"""%PDF-1.4
 1 0 obj
 << /Type /Catalog /Pages 2 0 R >>
 endobj
@@ -77,25 +76,25 @@ endobj
 << /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R /Resources << /Font << /F1 5 0 R >> >> >>
 endobj
 4 0 obj
-<< /Length 185 >>
+<< /Length 260 >>
 stream
 BT
 /F1 24 Tf
 100 700 Td
-(CrimeKit Investigation Report) Tj
+(CrimeKit Forensic Investigation Report) Tj
 0 -30 Td
 /F1 14 Tf
-(Case: Pipeline Test) Tj
+(Case ID: {case_id}) Tj
 0 -20 Td
-(Date: 2026-08-06) Tj
+(Date: 2026-10-08) Tj
 0 -20 Td
-(Status: Under Investigation) Tj
+(Status: Active Investigation) Tj
 0 -20 Td
-(Email: s.mitchell@austin.gov) Tj
+(Subject Email: suspect.apex_{run_id}@forensics.test) Tj
 0 -20 Td
-(Phone: (512) 555-0147) Tj
+(Phone: 512-555-0147) Tj
 0 -20 Td
-(IP: 192.168.1.45) Tj
+(Host IP: 192.168.1.45) Tj
 ET
 endstream
 endobj
@@ -109,18 +108,18 @@ xref
 0000000058 00000 n 
 0000000115 00000 n 
 0000000266 00000 n 
-0000000503 00000 n 
+0000000580 00000 n 
 trailer
 << /Size 6 /Root 1 0 R >>
 startxref
-580
-%%EOF"""
-    with open(test_pdf, "wb") as f:
-        f.write(pdf_content)
+680
+%%EOF""".encode()
+with open(test_pdf, "wb") as f:
+    f.write(pdf_content)
 
 file_size = os.path.getsize(test_pdf)
 file_hash = hashlib.sha256(open(test_pdf, "rb").read()).hexdigest()
-print(f"     PDF: {test_pdf} ({file_size} bytes)")
+print(f"     PDF: {test_pdf} ({file_size} bytes, sha256={file_hash[:12]}...)")
 
 r = requests.post(f"{BASE}/uploads/start", json={
     "filename": os.path.basename(test_pdf),
@@ -223,8 +222,8 @@ test("OCR extracted text", len(text) > 0, f"length={len(text)}")
 print("\n" + "=" * 60)
 print("  STAGE 10: VERIFY ENTITIES")
 print("=" * 60)
-r = requests.get(f"{BASE}/entities?case_id={case_id}", headers=HEADERS, timeout=10)
-test("GET /entities", r.status_code == 200, f"status={r.status_code}")
+r = requests.get(f"{BASE}/kg/entities", headers=HEADERS, timeout=10)
+test("GET /kg/entities", r.status_code == 200, f"status={r.status_code}")
 ent_data = r.json() if r.status_code == 200 else {}
 entities = ent_data.get("entities", [])
 test("Entities found", len(entities) > 0, f"count={len(entities)}")
@@ -248,10 +247,10 @@ test("Timeline events found", len(events) > 0, f"count={len(events)}")
 print("\n" + "=" * 60)
 print("  STAGE 12: VERIFY AI FINDINGS")
 print("=" * 60)
-r = requests.get(f"{BASE}/findings?case_id={case_id}", headers=HEADERS, timeout=10)
-test("GET /findings", r.status_code == 200, f"status={r.status_code}")
-find_data = r.json() if r.status_code == 200 else {}
-findings = find_data.get("findings", [])
+r = requests.get(f"{BASE}/workspace/cases/{case_id}/ai-findings", headers=HEADERS, timeout=10)
+test("GET /workspace/cases/{id}/ai-findings", r.status_code == 200, f"status={r.status_code}")
+find_data = r.json() if r.status_code == 200 else []
+findings = find_data if isinstance(find_data, list) else find_data.get("findings", [])
 test("AI findings present", len(findings) > 0, f"count={len(findings)}")
 
 # ── 13. Verify Knowledge Graph ──────────────────────────────────

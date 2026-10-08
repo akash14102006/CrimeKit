@@ -1,5 +1,5 @@
-import { Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { IsometricLoader } from "./IsometricLoader";
 
 interface LoadingStateProps {
   label?: string;
@@ -12,12 +12,12 @@ export function LoadingState({ label = "Loading...", className }: LoadingStatePr
       role="status"
       aria-live="polite"
       className={cn(
-        "flex flex-col items-center justify-center gap-3 p-8 text-muted-foreground",
+        "flex flex-col items-center justify-center gap-4 p-8 text-muted-foreground min-h-[240px]",
         className,
       )}
     >
-      <Loader2 className="h-6 w-6 animate-spin text-primary" aria-hidden="true" />
-      <p className="text-sm">{label}</p>
+      <IsometricLoader size={32} />
+      {label && <p className="text-xs font-mono text-muted-foreground tracking-wider uppercase">{label}</p>}
     </div>
   );
 }

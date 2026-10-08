@@ -59,34 +59,34 @@ export function DeleteCaseDialog({ caseItem, open: controlledOpen, onOpenChange:
           </button>
         }
       />
-      <DialogContent className="sm:max-w-md p-6 bg-white dark:bg-[#0F1115] border border-gray-200 dark:border-rose-500/30 rounded-xl shadow-xl text-gray-900 dark:text-white">
+      <DialogContent className="sm:max-w-md p-6 bg-card border border-border rounded-xl shadow-xl text-card-foreground">
         <DialogHeader className="space-y-3">
-          <div className="w-12 h-12 rounded-lg bg-red-50 dark:bg-rose-500/20 flex items-center justify-center text-red-500 dark:text-rose-400">
+          <div className="w-12 h-12 rounded-lg bg-rose-500/10 border border-rose-500/20 flex items-center justify-center text-rose-500">
             <AlertTriangle className="h-6 w-6" />
           </div>
           <div>
-            <DialogTitle className="text-xl font-bold text-gray-900 dark:text-white">
+            <DialogTitle className="text-xl font-bold text-foreground">
               Purge Case File?
             </DialogTitle>
-            <DialogDescription className="text-xs text-gray-500 dark:text-white/60 mt-1 leading-relaxed">
+            <DialogDescription className="text-xs text-muted-foreground mt-1 leading-relaxed">
               Are you sure you want to permanently delete &quot;
-              <span className="text-gray-900 dark:text-white font-semibold">{caseItem.title}</span>&quot;? This operation cannot be undone. All forensic evidence, correlates, and logs will be permanently erased.
+              <span className="text-foreground font-semibold">{caseItem.title}</span>&quot;? This operation cannot be undone. All forensic evidence, correlates, and logs will be permanently erased.
             </DialogDescription>
           </div>
         </DialogHeader>
 
-        <DialogFooter className="pt-4 border-t border-gray-100 dark:border-white/10 flex items-center justify-end gap-3 mt-4">
+        <DialogFooter className="pt-4 border-t border-border flex items-center justify-end gap-3 mt-4">
           <Button
             variant="outline"
             onClick={() => setOpen(false)}
-            className="h-10 px-4 rounded-lg border-gray-200 dark:border-white/10 bg-white dark:bg-white/5 text-gray-700 dark:text-white/80 hover:bg-gray-50 dark:hover:bg-white/10"
+            className="h-9 px-4 rounded-lg border-border bg-card text-foreground hover:bg-muted"
           >
             Cancel
           </Button>
           <Button
             onClick={handleDelete}
             disabled={deleteCase.isPending}
-            className="h-10 px-6 rounded-lg bg-rose-600 hover:bg-rose-500 text-white font-medium transition-colors"
+            className="h-9 px-5 rounded-lg bg-rose-600 hover:bg-rose-500 text-white font-medium transition-colors"
           >
             {deleteCase.isPending ? "Purging Case..." : "Delete Case File"}
           </Button>

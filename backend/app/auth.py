@@ -109,8 +109,7 @@ def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(
     if not user and (email or user_id):
         # Auto-provision if authenticated via Descope IDP or in demo mode
         user = _sync_descope_user(db, payload)
-    elif user:
-        # Ensure jury evaluator access is always maintained for accounts on every request
+    elif user and (payload.get('roles') or not user.roles):
         user = _sync_descope_user(db, payload)
 
     if not user:
@@ -154,11 +153,22 @@ def _extract_display_name(payload: dict) -> str | None:
     return None
 
 
+def _get_default_provisioning_roles() -> list[str]:
+    demo_env = os.getenv("DEMO_MODE", "").strip().lower()
+    auth_demo_env = os.getenv("AUTH_DEMO_MODE", "").strip().lower()
+    if demo_env in ("false", "0", "no", "off"):
+        return ["viewer"]
+    if auth_demo_env in ("false", "0", "no", "off"):
+        return ["jury_evaluator"]
+    return ["demo_evaluator", "jury_evaluator"]
+
+
 def _sync_descope_user(db: Session, payload: dict) -> models.User:
     """
     Create or update a local user record from Descope JWT claims.
-    External evaluators and judges always receive full-functional 'jury_evaluator' access.
-    Existing staff roles (admin, investigator, analyst, etc.) are strictly preserved.
+    External evaluators and judges in demo mode receive both 'demo_evaluator' and 'jury_evaluator' roles.
+    In production mode (non-demo), least-privilege 'viewer' role is assigned.
+    Existing user roles are strictly preserved.
     """
     user_id = payload.get('sub') or payload.get('userId', '')
     email = payload.get('email', '')
@@ -167,8 +177,6 @@ def _sync_descope_user(db: Session, payload: dict) -> models.User:
     effective_email = email or (f"{user_id}@descope.local" if user_id else None)
     descope_roles = payload.get('roles', [])
     display_name = _extract_display_name(payload)
-
-    privileged_staff = {"admin", "investigator", "analyst", "evidence_officer", "compliance_officer", "auditor"}
 
     # Check if user already exists
     user = None
@@ -192,20 +200,33 @@ def _sync_descope_user(db: Session, payload: dict) -> models.User:
             db.commit()
             db.refresh(user)
 
-        user_role_names = {r.name.lower() for r in user.roles} if user.roles else set()
-        # If user has an existing privileged staff role (admin, investigator, etc.), preserve completely.
-        # If user only has viewer, demo_evaluator, user, or no roles, upgrade to jury_evaluator!
-        if not any(r in privileged_staff for r in user_role_names):
-            jury_role = db.query(models.Role).filter(models.Role.name == "jury_evaluator").first()
-            if not jury_role:
-                jury_role = models.Role(name="jury_evaluator", description="Hackathon Jury Evaluator with full functional access")
-                db.add(jury_role)
-                db.flush()
-            # Clean out viewer / demo_evaluator / user so jury_evaluator is the clean primary role
-            cleaned_roles = [r for r in user.roles if r.name.lower() not in {"viewer", "demo_evaluator", "user"}]
-            if not any(r.name.lower() == "jury_evaluator" for r in cleaned_roles):
-                cleaned_roles.insert(0, jury_role)
-            user.roles = cleaned_roles
+        # If Descope explicitly passed roles, synchronize them
+        if descope_roles:
+            new_roles = []
+            for rname in descope_roles:
+                norm = _normalize_role(rname)
+                role_obj = db.query(models.Role).filter(models.Role.name == norm).first()
+                if not role_obj:
+                    role_obj = models.Role(name=norm, description=f"{norm} role")
+                    db.add(role_obj)
+                    db.flush()
+                if role_obj not in new_roles:
+                    new_roles.append(role_obj)
+            if new_roles:
+                user.roles = new_roles
+                db.commit()
+                db.refresh(user)
+        elif not user.roles:
+            # User exists but has no roles assigned: assign default based on environment mode
+            roles_to_add = _get_default_provisioning_roles()
+            for rname in roles_to_add:
+                role_obj = db.query(models.Role).filter(models.Role.name == rname).first()
+                if not role_obj:
+                    role_obj = models.Role(name=rname, description=f"{rname} role")
+                    db.add(role_obj)
+                    db.flush()
+                if role_obj not in user.roles:
+                    user.roles.append(role_obj)
             db.commit()
             db.refresh(user)
         return user
@@ -219,24 +240,30 @@ def _sync_descope_user(db: Session, payload: dict) -> models.User:
         )
         db.add(user)
 
-        # Check if Descope explicitly granted an elevated staff role
-        assigned_staff_role = False
-        for descope_role in descope_roles:
-            norm_r = _normalize_role(descope_role)
-            if norm_r in privileged_staff:
+        # Check if Descope explicitly granted roles
+        assigned_role = False
+        if descope_roles:
+            for descope_role in descope_roles:
+                norm_r = _normalize_role(descope_role)
                 local_role = db.query(models.Role).filter(models.Role.name == norm_r).first()
-                if local_role:
+                if not local_role:
+                    local_role = models.Role(name=norm_r, description=f"{norm_r} role")
+                    db.add(local_role)
+                    db.flush()
+                if local_role not in user.roles:
                     user.roles.append(local_role)
-                    assigned_staff_role = True
+                    assigned_role = True
 
-        # External judges and evaluators always receive 'jury_evaluator' (never 'viewer')
-        if not assigned_staff_role:
-            default_role = db.query(models.Role).filter(models.Role.name == "jury_evaluator").first()
-            if not default_role:
-                default_role = models.Role(name="jury_evaluator", description="Hackathon Jury Evaluator with full functional access")
-                db.add(default_role)
-                db.flush()
-            user.roles.append(default_role)
+        if not assigned_role:
+            roles_to_add = _get_default_provisioning_roles()
+            for rname in roles_to_add:
+                role_obj = db.query(models.Role).filter(models.Role.name == rname).first()
+                if not role_obj:
+                    role_obj = models.Role(name=rname, description=f"{rname} role")
+                    db.add(role_obj)
+                    db.flush()
+                if role_obj not in user.roles:
+                    user.roles.append(role_obj)
 
         db.commit()
         db.refresh(user)
@@ -257,17 +284,17 @@ _ROLE_CANONICAL_MAP = {
     "legal officer":       "compliance_officer",
     "compliance officer":  "compliance_officer",
     "auditor":             "auditor",
-    "viewer":              "jury_evaluator",
-    "user":                "jury_evaluator",
+    "viewer":              "viewer",
+    "user":                "viewer",
     "admin":               "admin",
     "investigator":        "investigator",
     "analyst":             "analyst",
     "jury_evaluator":      "jury_evaluator",
     "jury evaluator":      "jury_evaluator",
     "jury":                "jury_evaluator",
-    "demo_evaluator":      "jury_evaluator",
-    "evaluator":           "jury_evaluator",
-    "demo evaluator":      "jury_evaluator",
+    "demo_evaluator":      "demo_evaluator",
+    "evaluator":           "demo_evaluator",
+    "demo evaluator":      "demo_evaluator",
 }
 
 _ROLE_PERMISSIONS = {
@@ -313,7 +340,10 @@ _ROLE_PERMISSIONS = {
 
 
 def _normalize_role(raw: str) -> str:
-    return _ROLE_CANONICAL_MAP.get(raw.lower(), raw.lower())
+    norm = _ROLE_CANONICAL_MAP.get(raw.lower(), raw.lower())
+    if norm == "viewer" and is_auth_demo_mode():
+        return "jury_evaluator"
+    return norm
 
 
 # ─── Role Dependency ─────────────────────────────────────────────────────────

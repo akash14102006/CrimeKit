@@ -74,9 +74,9 @@ async def check_redis() -> dict:
         }
     except Exception as e:
         latency_ms = (time.perf_counter() - start) * 1000
-        logger.error(f"Redis health check failed: {e}")
+        logger.warning(f"Redis health check degraded: {e}")
         return {
-            "status": "unhealthy",
+            "status": "degraded",  # Redis is optional / in-memory fallback available
             "service": "redis",
             "latency_ms": round(latency_ms, 2),
             "message": str(e)

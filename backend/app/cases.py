@@ -93,6 +93,9 @@ def assign_case(case_id: str, payload: schemas.CaseUpdate, db: Session = Depends
 @router.delete('/{case_id}', status_code=204)
 @router.delete('/{case_id}/', status_code=204, include_in_schema=False)
 def delete_case(case_id: str, db: Session = Depends(get_db), current_user: models.User = Depends(role_required(['investigator', 'admin', 'jury_evaluator']))):
+    user_roles = [r.name for r in current_user.roles] if current_user.roles else []
+    if "admin" not in user_roles and "investigator" not in user_roles and "jury_evaluator" not in user_roles:
+        raise HTTPException(status_code=403, detail="forbidden: destructive case deletion not permitted")
 
     # Legal hold protection — block deletion of a case under an active legal hold.
     try:

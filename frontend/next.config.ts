@@ -4,7 +4,6 @@ const nextConfig: NextConfig = {
   // Allow LAN access to dev server HMR (for http://192.168.x.x access)
   allowedDevOrigins: ["192.168.29.240"],
 
-  output: "export",
   images: {
     unoptimized: true,
   },

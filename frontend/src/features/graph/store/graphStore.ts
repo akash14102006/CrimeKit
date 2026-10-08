@@ -4,14 +4,20 @@ import type { GraphNode, GraphEdge } from "@/types/kg";
 
 export type GraphLayout = "force" | "hierarchical" | "circular" | "grid";
 
+export type ViewMode = "3d" | "2d";
+
 interface GraphState {
   caseId: string | null;
   selectedNodeId: string | null;
   selectedEdgeId: string | null;
+  focusedNodeId: string | null;
   searchQuery: string;
   nodeTypeFilter: string;
   edgeTypeFilter: string;
+  factClassificationFilter: string;
+  minConfidence: number;
   layout: GraphLayout;
+  viewMode: ViewMode;
   showAnalytics: boolean;
   showMiniMap: boolean;
   expandedNodes: Set<string>;
@@ -29,10 +35,15 @@ interface GraphActions {
   setCaseId: (caseId: string | null) => void;
   selectNode: (id: string | null) => void;
   selectEdge: (id: string | null) => void;
+  focusNode: (id: string | null) => void;
   setSearchQuery: (query: string) => void;
   setNodeTypeFilter: (filter: string) => void;
   setEdgeTypeFilter: (filter: string) => void;
+  setFactClassificationFilter: (filter: string) => void;
+  setMinConfidence: (confidence: number) => void;
   setLayout: (layout: GraphLayout) => void;
+  setViewMode: (mode: ViewMode) => void;
+  toggleViewMode: () => void;
   toggleAnalytics: () => void;
   toggleMiniMap: () => void;
   expandNode: (id: string) => void;
@@ -57,10 +68,14 @@ const initialState: GraphState = {
   caseId: null,
   selectedNodeId: null,
   selectedEdgeId: null,
+  focusedNodeId: null,
   searchQuery: "",
   nodeTypeFilter: "all",
   edgeTypeFilter: "all",
+  factClassificationFilter: "all",
+  minConfidence: 0.0,
   layout: "force",
+  viewMode: "3d",
   showAnalytics: false,
   showMiniMap: true,
   expandedNodes: new Set(),
@@ -86,13 +101,18 @@ export const useGraphStore = create<GraphState & GraphActions>()(
           lastSyncedAt: null,
         }),
       selectNode: (selectedNodeId) =>
-        set({ selectedNodeId, selectedEdgeId: null }),
+        set({ selectedNodeId, selectedEdgeId: null, focusedNodeId: selectedNodeId }),
       selectEdge: (selectedEdgeId) =>
         set({ selectedEdgeId, selectedNodeId: null }),
+      focusNode: (focusedNodeId) => set({ focusedNodeId }),
       setSearchQuery: (searchQuery) => set({ searchQuery }),
       setNodeTypeFilter: (nodeTypeFilter) => set({ nodeTypeFilter }),
       setEdgeTypeFilter: (edgeTypeFilter) => set({ edgeTypeFilter }),
+      setFactClassificationFilter: (factClassificationFilter) => set({ factClassificationFilter }),
+      setMinConfidence: (minConfidence) => set({ minConfidence }),
       setLayout: (layout) => set({ layout }),
+      setViewMode: (viewMode) => set({ viewMode }),
+      toggleViewMode: () => set((s) => ({ viewMode: s.viewMode === "3d" ? "2d" : "3d" })),
       toggleAnalytics: () => set((s) => ({ showAnalytics: !s.showAnalytics })),
       toggleMiniMap: () => set((s) => ({ showMiniMap: !s.showMiniMap })),
       expandNode: (id) =>
