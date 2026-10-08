@@ -164,7 +164,12 @@ app.include_router(timeline_routes.router)
 app.include_router(reports_routes.router)
 app.include_router(processing.router)
 
+# Multi-Agent Investigation Workspace Router
+from .agents.routes import router as agents_router
+app.include_router(agents_router)
+
 # WebSocket routes for real-time graph updates
+
 from . import ws_routes
 app.include_router(ws_routes.router)
 

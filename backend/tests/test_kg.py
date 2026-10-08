@@ -73,7 +73,7 @@ def test_ingest_evidence_route(monkeypatch, client):
         def close(self):
             pass
 
-    monkeypatch.setattr('backend.app.kg.get_kg_client', lambda: MockKG())
+    monkeypatch.setattr('app.kg_routes.kg.get_kg_client', lambda: MockKG())
 
     resp = client.post(f"/kg/ingest/evidence/{ev_id}", headers=headers)
     assert resp.status_code == 200
@@ -92,7 +92,7 @@ def test_query_route(monkeypatch, client):
         def close(self):
             pass
 
-    monkeypatch.setattr('backend.app.kg.get_kg_client', lambda: MockKG2())
+    monkeypatch.setattr('app.kg_routes.kg.get_kg_client', lambda: MockKG2())
     resp = client.post('/kg/query', json={'cypher': 'MATCH (n) RETURN n LIMIT 1'}, headers=headers)
     assert resp.status_code == 200
     body = resp.json()

@@ -97,15 +97,35 @@ def init_db():
         configure_database()
     # ensure all model modules are imported so Base.metadata is populated
     try:
-        import importlib
-        importlib.import_module('backend.app.models')
-        importlib.import_module('backend.app.compliance')
-        importlib.import_module('backend.app.multitenancy')
-        importlib.import_module('backend.app.blockchain.models')
+        from . import models, compliance, multitenancy
     except Exception:
         pass
     Base.metadata.create_all(bind=_engine)
     _migrate_add_columns(_engine)
+
+    # Ensure all enterprise roles exist
+    ENTERPRISE_ROLES = [
+        ("admin",               "Full platform administrator"),
+        ("investigator",        "Lead forensic investigator — default for new users"),
+        ("analyst",             "Forensic data analyst"),
+        ("viewer",              "Read-only access to evidence and cases"),
+        ("evidence_officer",    "Manages evidence chain of custody"),
+        ("compliance_officer",  "Compliance and audit access"),
+        ("auditor",             "Audit log read access"),
+        ("user",                "Basic authenticated user"),
+        ("demo_evaluator",      "Hackathon evaluator demonstration access"),
+        ("jury_evaluator",      "Hackathon Jury Evaluator with full functional access"),
+    ]
+    try:
+        from . import models
+        db = SessionLocal()
+        for role_name, role_desc in ENTERPRISE_ROLES:
+            if not db.query(models.Role).filter(models.Role.name == role_name).first():
+                db.add(models.Role(name=role_name, description=role_desc))
+        db.commit()
+        db.close()
+    except Exception:
+        pass
 
 
 def get_engine():

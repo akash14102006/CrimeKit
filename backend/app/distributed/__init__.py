@@ -63,7 +63,9 @@ logger = logging.getLogger(__name__)
 # Configuration
 # ---------------------------------------------------------------------------
 
-REDIS_URL: str = os.getenv("REDIS_URL", "redis://localhost:6379/0")
+_redis_pass = os.getenv("REDIS_PASSWORD", "crimekit_dev_redis")
+_default_redis_url = f"redis://:{_redis_pass}@localhost:6379/0" if _redis_pass else "redis://localhost:6379/0"
+REDIS_URL: str = os.getenv("REDIS_URL", _default_redis_url)
 CONSUMER_GROUP: str = os.getenv("CRIMEKIT_CONSUMER_GROUP", "crimekit-workers")
 CONSUMER_PREFIX: str = os.getenv("CRIMEKIT_CONSUMER_PREFIX", "worker")
 HEARTBEAT_TTL: int = int(os.getenv("CRIMEKIT_HEARTBEAT_TTL", "30"))

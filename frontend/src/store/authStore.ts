@@ -16,6 +16,39 @@ function broadcastLogout() {
   }
 }
 
+import { env } from "@/config/env";
+
+export const DEV_ADMIN_PROFILE: UserProfile = {
+  id: "admin-001",
+  email: "admin@crimekit.local",
+  name: "System Administrator",
+  role: "admin",
+  roles: ["admin", "investigator", "jury_evaluator"],
+  permissions: [
+    "case:read",
+    "case:create",
+    "case:update",
+    "case:delete",
+    "evidence:read",
+    "evidence:upload",
+    "evidence:update",
+    "evidence:delete",
+    "kg:query",
+    "timeline:read",
+    "search:query",
+    "compliance:manage",
+    "audit:read",
+    "user:manage",
+    "analytics:read",
+  ],
+  is_active: true,
+  organization: "CrimeKit Enterprise",
+  tenant: "default",
+};
+
+export const DEV_ADMIN_TOKEN =
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZG1pbi0wMDEiLCJlbWFpbCI6ImFkbWluQGNyaW1la2l0LmxvY2FsIiwicm9sZXMiOlsiYWRtaW4iLCJpbnZlc3RpZ2F0b3IiXSwiZXhwIjoyMTA2ODAxMTYwfQ.fjHsqieenyAgVdB_Lol7_jYEU7DkO8VdoDRoJIhSGM0";
+
 interface AuthState {
   user: UserProfile | null;
   sessionToken: string | null;
@@ -29,14 +62,18 @@ interface AuthState {
   markSessionResolved: () => void;
 }
 
+const initialDevUser = env.devAuthDisabled ? DEV_ADMIN_PROFILE : null;
+const initialDevToken = env.devAuthDisabled ? DEV_ADMIN_TOKEN : null;
+const initialDevAuth = env.devAuthDisabled;
+
 export const useAuthStore = create<AuthState>()(
   persist(
     (set) => ({
-      user: null,
-      sessionToken: null,
-      refreshToken: null,
-      isAuthenticated: false,
-      sessionResolved: false,
+      user: initialDevUser,
+      sessionToken: initialDevToken,
+      refreshToken: initialDevToken,
+      isAuthenticated: initialDevAuth,
+      sessionResolved: env.devAuthDisabled,
 
       setSession: (sessionToken, refreshToken) =>
         set({
@@ -48,6 +85,17 @@ export const useAuthStore = create<AuthState>()(
       setUser: (user) => set({ user }),
 
       clearSession: () => {
+        if (env.devAuthDisabled) {
+          // In development mode with auth disabled, stay logged in as dev admin
+          set({
+            user: DEV_ADMIN_PROFILE,
+            sessionToken: DEV_ADMIN_TOKEN,
+            refreshToken: DEV_ADMIN_TOKEN,
+            isAuthenticated: true,
+            sessionResolved: true,
+          });
+          return;
+        }
         set({
           user: null,
           sessionToken: null,

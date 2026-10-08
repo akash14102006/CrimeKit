@@ -26,7 +26,7 @@ function ConversationItem({
   onRename,
   onTogglePin,
 }: {
-  conv: { id: string; title: string; updated_at: number; pinned: boolean; messages: unknown[] };
+  conv: { id: string; title: string; agent_id?: string; updated_at: number; pinned: boolean; messages: unknown[] };
   isActive: boolean;
   onSelect: () => void;
   onDelete: () => void;
@@ -73,9 +73,19 @@ function ConversationItem({
         <>
           {conv.pinned && <Pin className="h-3 w-3 text-amber-500 shrink-0" />}
           <div className="flex-1 min-w-0">
-            <div className="truncate font-medium text-xs">{conv.title}</div>
-            <div className="text-[10px] text-muted-foreground">
-              {conv.messages.length} messages
+            <div className="flex items-center gap-1.5">
+              <span className="truncate font-medium text-xs">{conv.title}</span>
+              {isActive && (
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse shrink-0" />
+              )}
+            </div>
+            <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
+              {conv.agent_id && (
+                <span className="font-mono uppercase text-[9px] bg-muted/80 px-1 rounded">
+                  {conv.agent_id.replace("case-orchestrator", "orchestrator")}
+                </span>
+              )}
+              <span>{conv.messages.length} msgs</span>
             </div>
           </div>
           <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">

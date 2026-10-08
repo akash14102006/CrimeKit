@@ -245,25 +245,25 @@ async function withBody<T>(
 export const api = {
   get: async <T>(
     url: string,
-    config?: InternalAxiosRequestConfig,
+    config?: import("axios").AxiosRequestConfig,
   ): Promise<T> => {
     const response = await apiClient.get<T>(url, config);
     return response.data;
   },
-  post: <T>(url: string, data?: unknown, config?: InternalAxiosRequestConfig) =>
-    withBody<T>("post", url, data, config),
-  put: <T>(url: string, data?: unknown, config?: InternalAxiosRequestConfig) =>
-    withBody<T>("put", url, data, config),
-  patch: <T>(url: string, data?: unknown, config?: InternalAxiosRequestConfig) =>
-    withBody<T>("patch", url, data, config),
+  post: <T>(url: string, data?: unknown, config?: import("axios").AxiosRequestConfig) =>
+    withBody<T>("post", url, data, config as InternalAxiosRequestConfig),
+  put: <T>(url: string, data?: unknown, config?: import("axios").AxiosRequestConfig) =>
+    withBody<T>("put", url, data, config as InternalAxiosRequestConfig),
+  patch: <T>(url: string, data?: unknown, config?: import("axios").AxiosRequestConfig) =>
+    withBody<T>("patch", url, data, config as InternalAxiosRequestConfig),
   delete: async <T>(
     url: string,
-    config?: InternalAxiosRequestConfig,
+    config?: import("axios").AxiosRequestConfig,
   ): Promise<T> => {
     const response = await apiClient.delete<T>(url, {
       ...config,
       // Ensure axios doesn't try to JSON.parse an empty 204 body.
-      responseType: config?.responseType ?? "text",
+      responseType: (config?.responseType as "text") ?? "text",
     });
     // 204 No Content — response.data is empty string; coerce to void-like return.
     if (response.status === 204 || !response.data) {

@@ -80,7 +80,7 @@ def test_p2_001_blockchain_config_importable():
 
 def test_p2_001_blockchain_routes_included(client):
     """Verify blockchain endpoints are registered on app."""
-    paths = list(app.openapi()["paths"].keys())
+    paths = list(app.openapi().get("paths", {}).keys())
     assert "/api/v1/blockchain/protocol" in paths
     assert "/api/v1/blockchain/stats" in paths
 

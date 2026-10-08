@@ -1,0 +1,22 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: crimekit-forensic-extraction-job
+  namespace: crimekit
+spec:
+  ttlSecondsAfterFinished: 300
+  template:
+    spec:
+      restartPolicy: OnFailure
+      containers:
+        - name: forensic-runner
+          image: cr.nebius.cloud/crimekit/forensics:latest
+          command: ["python", "-m", "backend.app.processing"]
+          resources:
+            requests:
+              cpu: "4"
+              memory: "16Gi"
+            limits:
+              cpu: "8"
+              memory: "32Gi"
+              nvidia.com/gpu: "1"

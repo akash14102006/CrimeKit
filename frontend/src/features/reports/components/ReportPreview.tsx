@@ -70,10 +70,28 @@ export const ReportPreview = memo(function ReportPreview() {
               <span>By: {selectedReport.created_by}</span>
               <span>{new Date(selectedReport.created_at).toLocaleDateString()}</span>
             </div>
+            {/* Phase 7 Forensic Evidentiary Distinction Notice */}
+            <div className="rounded border border-amber-500/20 bg-amber-500/5 p-2 space-y-1">
+              <div className="flex items-center gap-1.5 text-[10px] font-semibold text-amber-500">
+                <Scale className="h-3 w-3" />
+                <span>Forensic Review Template — Human Verification Required</span>
+              </div>
+              <p className="text-[9px] text-muted-foreground">
+                CrimeKit compiles cryptographic SHA-256 digests and specialist exhibits. Does not determine guilt or automatic legal admissibility.
+              </p>
+              <div className="flex items-center gap-1 pt-1">
+                <Badge variant="outline" className="text-[8px] border-emerald-500/30 text-emerald-500">
+                  Forensic Evidence: Verified Hashes
+                </Badge>
+                <Badge variant="outline" className="text-[8px] border-blue-500/30 text-blue-500">
+                  AI Analysis: Correlated
+                </Badge>
+              </div>
+            </div>
           </div>
 
           <div
-            className="prose prose-xs max-w-none"
+            className="prose prose-xs max-w-none text-xs leading-relaxed"
             dangerouslySetInnerHTML={{ __html: htmlContent }}
           />
 
