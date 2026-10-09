@@ -158,8 +158,9 @@ def test_create_and_list_sessions(auth_headers, sample_cases):
         assert s["agent_id"] == "detective"
 
 
-def test_chat_turn_execution_and_persistence(auth_headers, sample_cases):
+def test_chat_turn_execution_and_persistence(auth_headers, sample_cases, monkeypatch):
     """Verify submitting a message returns structured tool executions, findings, and persists history."""
+    monkeypatch.setenv("AGENT_RUNTIME_MODE", "mock")
     case_id = sample_cases["case_a"]
     create_resp = client.post(
         "/api/v1/ai/sessions",

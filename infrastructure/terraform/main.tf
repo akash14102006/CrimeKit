@@ -156,20 +156,20 @@ resource "aws_security_group" "rds_sg" {
 }
 
 resource "aws_db_instance" "postgres" {
-  identifier           = "${var.project}-${var.env}-postgres"
-  allocated_storage    = 50
-  max_allocated_storage = 500
-  engine               = "postgres"
-  engine_version       = "16.3"
-  instance_class       = var.db_instance_class
-  db_name              = var.db_name
-  username             = var.db_username
-  password             = var.db_password
-  db_subnet_group_name = aws_db_subnet_group.rds.name
+  identifier             = "${var.project}-${var.env}-postgres"
+  allocated_storage      = 50
+  max_allocated_storage  = 500
+  engine                 = "postgres"
+  engine_version         = "16.3"
+  instance_class         = var.db_instance_class
+  db_name                = var.db_name
+  username               = var.db_username
+  password               = var.db_password
+  db_subnet_group_name   = aws_db_subnet_group.rds.name
   vpc_security_group_ids = [aws_security_group.rds_sg.id]
-  skip_final_snapshot  = true
-  storage_encrypted    = true
-  deletion_protection  = false
+  skip_final_snapshot    = true
+  storage_encrypted      = true
+  deletion_protection    = false
 
   tags = {
     Name = "${var.project}-${var.env}-db"
