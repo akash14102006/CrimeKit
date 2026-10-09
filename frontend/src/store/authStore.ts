@@ -18,37 +18,6 @@ function broadcastLogout() {
 
 import { env } from "@/config/env";
 
-export const DEV_ADMIN_PROFILE: UserProfile = {
-  id: "admin-001",
-  email: "admin@crimekit.local",
-  name: "System Administrator",
-  role: "admin",
-  roles: ["admin", "investigator", "jury_evaluator"],
-  permissions: [
-    "case:read",
-    "case:create",
-    "case:update",
-    "case:delete",
-    "evidence:read",
-    "evidence:upload",
-    "evidence:update",
-    "evidence:delete",
-    "kg:query",
-    "timeline:read",
-    "search:query",
-    "compliance:manage",
-    "audit:read",
-    "user:manage",
-    "analytics:read",
-  ],
-  is_active: true,
-  organization: "CrimeKit Enterprise",
-  tenant: "default",
-};
-
-export const DEV_ADMIN_TOKEN =
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZG1pbi0wMDEiLCJlbWFpbCI6ImFkbWluQGNyaW1la2l0LmxvY2FsIiwicm9sZXMiOlsiYWRtaW4iLCJpbnZlc3RpZ2F0b3IiXSwiZXhwIjoyMTA2ODAxMTYwfQ.fjHsqieenyAgVdB_Lol7_jYEU7DkO8VdoDRoJIhSGM0";
-
 interface AuthState {
   user: UserProfile | null;
   sessionToken: string | null;

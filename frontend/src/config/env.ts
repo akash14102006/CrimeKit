@@ -41,7 +41,7 @@ export const env = {
   demoMode:
     process.env.NEXT_PUBLIC_DEMO_MODE !== undefined
       ? process.env.NEXT_PUBLIC_DEMO_MODE === "true"
-      : process.env.NODE_ENV !== "production",
+      : false,
 
   /** Whether demo/development authentication mode is active (strictly false in production). */
   authDemoMode:
