@@ -46,7 +46,6 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
-package-lock.json
 yarn.lock
 
 # Large Binaries & Executables (Strictly exceeds or approaches GitHub limits)

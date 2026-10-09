@@ -17,6 +17,7 @@ from .schemas import (
     AgentHandoffContract,
 )
 from .metadata import CANONICAL_AGENTS
+from .gateway import BaseModelProvider
 
 
 class AgentRuntimeResult:
