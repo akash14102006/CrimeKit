@@ -151,13 +151,34 @@ def publish_event(event: DomainEvent) -> bool:
         _redis_available, event.event_type,
     )
     global _in_memory_events
+    ev_dict = event.to_dict()
+    # Normalize event / type fields for consumers
+    if "type" not in ev_dict and "event_type" in ev_dict:
+        ev_dict["type"] = ev_dict["event_type"]
+    if "event" not in ev_dict and "event_type" in ev_dict:
+        ev_dict["event"] = ev_dict["event_type"]
     _in_memory_events.append({
         "channel": channel,
-        "event": event.to_dict(),
+        "event": ev_dict,
         "timestamp": time.time(),
     })
     if len(_in_memory_events) > _in_memory_max_size:
         _in_memory_events = _in_memory_events[-_in_memory_max_size:]
+
+    # Bridge directly to websocket_manager when in-memory so connected sockets get immediate events
+    try:
+        import asyncio
+        from .websocket_manager import manager
+        loop = None
+        try:
+            loop = asyncio.get_running_loop()
+        except RuntimeError:
+            pass
+        if loop and loop.is_running():
+            asyncio.create_task(manager.broadcast_to_case(event.case_id, ev_dict))
+    except Exception as ws_err:
+        logger.debug("In-memory direct WS broadcast skipped: %s", ws_err)
+
     return False
 
 

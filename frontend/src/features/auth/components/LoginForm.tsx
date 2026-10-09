@@ -13,9 +13,11 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { useAuthStore } from "@/store/authStore";
+import { useAuthStore, DEV_ADMIN_PROFILE, DEV_ADMIN_TOKEN } from "@/store/authStore";
 import { env } from "@/config/env";
 import { extractDisplayName } from "@/lib/userDisplay";
+import { useEffect } from "react";
+import { Button } from "@/components/ui/button";
 
 const DescopeFlow = dynamic(
   () =>
@@ -47,6 +49,20 @@ export function LoginForm() {
   const { setSession, setUser, markSessionResolved } = useAuthStore();
   const navigated = useRef(false);
   const [error, setError] = useState("");
+
+  const bypassToDev = useCallback(() => {
+    setSession(DEV_ADMIN_TOKEN, DEV_ADMIN_TOKEN);
+    setUser(DEV_ADMIN_PROFILE);
+    markSessionResolved();
+    navigated.current = true;
+    router.replace("/dashboard");
+  }, [router, setSession, setUser, markSessionResolved]);
+
+  useEffect(() => {
+    if (env.devAuthDisabled && !navigated.current) {
+      bypassToDev();
+    }
+  }, [bypassToDev]);
 
   const handleSuccess = useCallback(
     (
@@ -189,6 +205,19 @@ export function LoginForm() {
           onError={handleError}
           theme="dark"
         />
+
+        {env.devAuthDisabled && (
+          <div className="mt-4 pt-4 border-t border-border">
+            <Button
+              type="button"
+              variant="default"
+              className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-medium"
+              onClick={bypassToDev}
+            >
+              Enter Dev Mode (Admin Bypass)
+            </Button>
+          </div>
+        )}
       </CardContent>
       <CardFooter className="flex justify-center border-t p-4 mt-4">
         <p className="text-sm text-muted-foreground">

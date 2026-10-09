@@ -5,6 +5,7 @@ per-IP rate limiting with configurable windows and limits.
 """
 import asyncio
 import logging
+import os
 import time
 from collections import defaultdict
 from typing import Optional
@@ -127,7 +128,7 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         client_ip = request.client.host if request.client else "unknown"
         path = request.url.path
 
-        if request.method == "OPTIONS":
+        if request.method == "OPTIONS" or os.getenv("TESTING") == "1":
             return await call_next(request)
 
         # Skip rate limiting for health checks

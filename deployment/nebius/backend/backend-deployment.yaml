@@ -1,0 +1,53 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: crimekit-backend
+  namespace: crimekit
+  labels:
+    app: crimekit-backend
+    component: api-gateway
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: crimekit-backend
+  template:
+    metadata:
+      labels:
+        app: crimekit-backend
+    spec:
+      containers:
+        - name: backend
+          image: cr.nebius.cloud/crimekit/backend:latest
+          ports:
+            - containerPort: 8000
+          env:
+            - name: AGENT_RUNTIME_MODE
+              value: "nebius"
+            - name: NEBIUS_BASE_URL
+              value: "https://api.tokenfactory.nebius.com/v1"
+            - name: NEBIUS_MODEL
+              value: "nvidia/nemotron-4-340b-instruct"
+            - name: NEBIUS_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: crimekit-secrets
+                  key: nebius-api-key
+            - name: TAVILY_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: crimekit-secrets
+                  key: tavily-api-key
+          resources:
+            requests:
+              cpu: "2"
+              memory: "4Gi"
+            limits:
+              cpu: "4"
+              memory: "8Gi"
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 10
+            periodSeconds: 5

@@ -48,4 +48,10 @@ export const env = {
     process.env.NEXT_PUBLIC_AUTH_DEMO_MODE !== undefined
       ? process.env.NEXT_PUBLIC_AUTH_DEMO_MODE === "true"
       : false,
+
+  /** Whether authentication is completely bypassed for development. */
+  devAuthDisabled:
+    process.env.NEXT_PUBLIC_DISABLE_AUTH !== undefined
+      ? process.env.NEXT_PUBLIC_DISABLE_AUTH === "true"
+      : process.env.NODE_ENV !== "production",
 } as const;

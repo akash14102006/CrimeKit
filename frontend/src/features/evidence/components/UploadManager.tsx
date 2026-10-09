@@ -26,6 +26,7 @@ import { toast } from "@/components/ui/toast";
 import { getErrorMessage } from "@/lib/api-client";
 import { uploadService } from "@/services/uploadService";
 import { useUploadStore, type UploadQueueItem } from "@/store/uploadStore";
+import { useCases } from "@/hooks/queries/useCases";
 
 const DEFAULT_CHUNK_SIZE = 100 * 1024 * 1024;
 const MAX_CHUNK_RETRIES = 5;
@@ -101,6 +102,8 @@ export function UploadManager({ initialCaseId, open: controlledOpen, onOpenChang
     else setInternalOpen(val);
   };
   const [caseId, setCaseId] = useState(initialCaseId || "");
+  const { data: casesData } = useCases({ limit: 100 });
+  const casesList = casesData?.items ?? [];
   const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const folderInputRef = useRef<HTMLInputElement>(null);
@@ -109,6 +112,12 @@ export function UploadManager({ initialCaseId, open: controlledOpen, onOpenChang
   const inflightProgressRef = useRef<Record<string, Record<number, number>>>({});
   const completedBytesRef = useRef<Record<string, number>>({});
   const speedSampleRef = useRef<Record<string, { ts: number; bytes: number }>>({});
+
+  useEffect(() => {
+    if (initialCaseId) {
+      setCaseId(initialCaseId);
+    }
+  }, [initialCaseId]);
 
   useEffect(() => {
     markHydratedUploadsNeedingFile();
@@ -458,8 +467,29 @@ export function UploadManager({ initialCaseId, open: controlledOpen, onOpenChang
           <div className="flex min-h-0 min-w-0 flex-col gap-4">
             <div className="shrink-0 rounded-lg border bg-muted/20 p-4">
               <div className="space-y-1.5">
-                <Label htmlFor="upload-case-id">Case ID</Label>
-                <Input id="upload-case-id" value={caseId} onChange={(event) => setCaseId(event.target.value)} placeholder="Associate new uploads with a case..." />
+                <Label htmlFor="upload-case-id">Case</Label>
+                {casesList.length > 0 ? (
+                  <select
+                    id="upload-case-select"
+                    value={caseId}
+                    onChange={(event) => setCaseId(event.target.value)}
+                    className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                  >
+                    <option value="">-- Select an active case (or type ID below) --</option>
+                    {casesList.map((c) => (
+                      <option key={c.id} value={c.id}>
+                        {c.title} ({c.id.slice(0, 8)}) - {c.status}
+                      </option>
+                    ))}
+                  </select>
+                ) : null}
+                <Input
+                  id="upload-case-id"
+                  value={caseId}
+                  onChange={(event) => setCaseId(event.target.value)}
+                  placeholder="Case ID (e.g. 550e8400-e29b-41d4-a716-446655440000)"
+                  className="font-mono text-xs"
+                />
               </div>
 
               <div className="mt-4 flex flex-wrap gap-2">

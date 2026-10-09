@@ -631,8 +631,7 @@ def delete_evidence(
     db.query(models.ForensicResult).filter(models.ForensicResult.evidence_id == evidence_id).delete()
     db.query(models.ForensicJob).filter(models.ForensicJob.evidence_id == evidence_id).delete()
 
-    # 6b. Remove blockchain commitments, compliance locks, and other referencing tables
-    # Note: chain_of_custody audit records are strictly preserved for non-repudiation integrity
+    # Note: chain_of_custody audit records are strictly preserved for non-repudiation integrity and auditability
     from sqlalchemy import text
     for tbl in [
         "evidence_commitments",

@@ -159,6 +159,20 @@ class ConnectionManager:
         for conn in disconnected:
             self._connections.get(case_id, set()).discard(conn)
 
+    async def broadcast(self, event: dict, case_id: Optional[str] = None):
+        """
+        Broadcast an event to WebSocket clients.
+        If case_id is provided or present in event['case_id'], broadcasts to that specific case channel.
+        Otherwise, broadcasts to all connected case channels.
+        """
+        target_case_id = case_id or event.get("case_id")
+        if target_case_id:
+            await self.broadcast_to_case(str(target_case_id), event)
+        else:
+            # Broadcast to all active cases
+            for cid in list(self._connections.keys()):
+                await self.broadcast_to_case(cid, event)
+
     async def handle_message(self, ws: Any, case_id: str, user_id: str, message: str):
         """
         Handle incoming WebSocket message from client.

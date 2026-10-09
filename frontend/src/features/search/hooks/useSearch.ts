@@ -41,22 +41,30 @@ export function useUnifiedSearch() {
 
   const queryResult = useQuery({
     queryKey: ["search", "unified", request],
-    queryFn: async ({ signal }) => {
-      setLoading(true);
-      try {
-        const response = await searchService.query(request);
-        setSearchResults(response);
-        addToHistory(response.total);
-        return response;
-      } catch (error: unknown) {
-        const msg = error instanceof Error ? error.message : "Search failed";
-        setError(msg);
-        throw error;
-      }
+    queryFn: async () => {
+      return searchService.query(request);
     },
     enabled: !!(debouncedQuery && debouncedQuery.trim()),
     refetchOnWindowFocus: false,
   });
+
+  useEffect(() => {
+    setLoading(queryResult.isLoading || queryResult.isFetching);
+  }, [queryResult.isLoading, queryResult.isFetching, setLoading]);
+
+  useEffect(() => {
+    if (queryResult.data) {
+      setSearchResults(queryResult.data);
+      addToHistory(queryResult.data.total);
+    }
+  }, [queryResult.data, setSearchResults, addToHistory]);
+
+  useEffect(() => {
+    if (queryResult.error) {
+      const msg = queryResult.error instanceof Error ? queryResult.error.message : "Search failed";
+      setError(msg);
+    }
+  }, [queryResult.error, setError]);
 
   const cancel = useCallback(() => {
     abortRef.current?.abort();

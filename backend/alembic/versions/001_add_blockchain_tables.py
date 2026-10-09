@@ -29,7 +29,7 @@ def upgrade() -> None:
         sa.Column("chain_id", sa.Integer(), nullable=True),
         sa.Column("network", sa.String(), nullable=True),
         sa.Column("contract_address", sa.String(), nullable=True),
-        sa.Column("is_active", sa.Boolean(), server_default=sa.text("1")),
+        sa.Column("is_active", sa.Boolean(), server_default=sa.text("true")),
         sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.text("CURRENT_TIMESTAMP")),
     )
 

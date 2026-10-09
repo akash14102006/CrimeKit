@@ -205,6 +205,35 @@ class UploadChunk(Base):
     uploaded_at = Column(DateTime(timezone=True), nullable=True)
 
 
+class AIAgentSession(Base):
+    __tablename__ = 'ai_agent_sessions'
+    id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
+    case_id = Column(String, ForeignKey('cases.id', ondelete='CASCADE'), nullable=False, index=True)
+    agent_id = Column(String, nullable=False, index=True)
+    user_id = Column(String, ForeignKey('users.id', ondelete='SET NULL'), nullable=True, index=True)
+    title = Column(String, nullable=False)
+    status = Column(String, default='active')  # active, archived
+    pinned = Column(Boolean, default=False)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+
+    # Relationships
+    messages = relationship('AIMessageModel', back_populates='session', cascade='all, delete-orphan', order_by='AIMessageModel.created_at')
+
+
+class AIMessageModel(Base):
+    __tablename__ = 'ai_messages'
+    id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
+    session_id = Column(String, ForeignKey('ai_agent_sessions.id', ondelete='CASCADE'), nullable=False, index=True)
+    role = Column(String, nullable=False)  # user, assistant, system, tool
+    content = Column(Text, nullable=False)
+    agent_id = Column(String, nullable=True, index=True)
+    metadata_json = Column(JSON, nullable=True)  # tool_executions, findings, citations, evidence_refs, handoff
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), index=True)
+
+    session = relationship('AIAgentSession', back_populates='messages')
+
+
 # Re-export Blockchain models if available
 try:
     from .blockchain.models import (
@@ -217,4 +246,5 @@ try:
     )
 except ImportError:
     pass
+
 

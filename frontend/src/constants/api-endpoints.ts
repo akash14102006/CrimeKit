@@ -66,6 +66,10 @@ export const API = {
     query: "/ai/agent/query",
     ingest: "/ai/ingest",
     document: (docId: string) => `/ai/documents/${docId}`,
+    agents: "/api/v1/ai/agents",
+    sessions: "/api/v1/ai/sessions",
+    sessionDetail: (sessionId: string) => `/api/v1/ai/sessions/${sessionId}`,
+    sessionMessages: (sessionId: string) => `/api/v1/ai/sessions/${sessionId}/messages`,
   },
   workspace: {
     detail: (caseId: string) => `/workspace/cases/${caseId}`,

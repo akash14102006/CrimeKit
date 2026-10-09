@@ -131,4 +131,142 @@ export const aiService = {
         evidence_id?: string;
       }>
     >(API.search.timeline, payload),
+
+  // ── Multi-Agent Session & Turn Management ──
+  getAgents: (): Promise<BackendAgentMetadata[]> =>
+    api.get<BackendAgentMetadata[]>(API.ai.agents),
+
+  createSession: (payload: {
+    case_id: string;
+    agent_id: string;
+    title?: string;
+  }): Promise<BackendSessionResponse> =>
+    api.post<BackendSessionResponse>(API.ai.sessions, payload),
+
+  listSessions: (params: {
+    case_id: string;
+    agent_id?: string;
+  }): Promise<{ items: BackendSessionResponse[]; total: number }> =>
+    api.get<{ items: BackendSessionResponse[]; total: number }>(API.ai.sessions, {
+      params,
+    }),
+
+  getSession: (sessionId: string): Promise<BackendSessionResponse> =>
+    api.get<BackendSessionResponse>(API.ai.sessionDetail(sessionId)),
+
+  getSessionMessages: (sessionId: string): Promise<BackendMessageResponse[]> =>
+    api.get<BackendMessageResponse[]>(API.ai.sessionMessages(sessionId)),
+
+  sendMessage: (
+    sessionId: string,
+    message: string,
+  ): Promise<BackendChatTurnResponse> =>
+    api.post<BackendChatTurnResponse>(API.ai.sessionMessages(sessionId), {
+      message,
+    }),
 };
+
+export interface BackendAgentMetadata {
+  id: string;
+  name: string;
+  short_name: string;
+  tagline: string;
+  description: string;
+  icon: string;
+  category: string;
+  status: string;
+  capabilities: string[];
+  tools: string[];
+  suggested_questions: string[];
+}
+
+export interface BackendSessionResponse {
+  id: string;
+  case_id: string;
+  agent_id: string;
+  user_id?: string;
+  title: string;
+  status: string;
+  pinned: boolean;
+  created_at: string;
+  updated_at: string;
+  message_count: number;
+}
+
+export interface BackendMessageResponse {
+  id: string;
+  session_id: string;
+  role: "user" | "assistant" | "system" | "tool";
+  content: string;
+  agent_id?: string;
+  created_at?: string;
+  metadata?: {
+    tool_executions?: Array<{
+      id: string;
+      tool_name: string;
+      display_name: string;
+      status: "pending" | "running" | "completed" | "failed";
+      started_at?: number;
+      completed_at?: number;
+      output_snippet?: string;
+    }>;
+    findings?: Array<{
+      id: string;
+      title: string;
+      description: string;
+      confidence: number;
+      status: "supported" | "contradicted" | "needs_review" | "insufficient_evidence";
+      agent_id: string;
+      evidence_refs: string[];
+      subgraph_nodes?: string[];
+    }>;
+    evidence_refs?: string[];
+    confidence?: number;
+    handoff?: {
+      source_agent: string;
+      target_agent: string;
+      reason: string;
+      context_summary?: string;
+    };
+  };
+}
+
+export interface BackendChatTurnResponse {
+  session_id: string;
+  user_message: BackendMessageResponse;
+  message: BackendMessageResponse;
+  agent: {
+    id: string;
+    name: string;
+    category?: string;
+    icon?: string;
+  };
+  tool_executions: Array<{
+    id: string;
+    tool_name: string;
+    display_name: string;
+    status: "pending" | "running" | "completed" | "failed";
+    started_at?: number;
+    completed_at?: number;
+    output_snippet?: string;
+  }>;
+  findings: Array<{
+    id: string;
+    title: string;
+    description: string;
+    confidence: number;
+    status: "supported" | "contradicted" | "needs_review" | "insufficient_evidence";
+    agent_id: string;
+    evidence_refs: string[];
+    subgraph_nodes?: string[];
+  }>;
+  evidence_refs: string[];
+  confidence?: number;
+  handoff?: {
+    source_agent: string;
+    target_agent: string;
+    reason: string;
+    context_summary?: string;
+  };
+}
+

@@ -1,352 +1,168 @@
-# ENTERPRISE AI ENGINEERING OPERATING SYSTEM
-## Complete Constitution & Governance Framework
+# CrimeKit — Digital Forensics & Multi-Agent Investigation Platform
 
-**Status:** Production  
-**Version:** 1.0  
-**Last Updated:** June 2026  
-**Authority:** Principal Architect + Chief Technology Officer  
+> **Nebius × NVIDIA Global AI Hackathon (Best Apps & Agents Track)**  
+> Evidence-grounded, multi-agent AI forensic analysis powered by **NVIDIA Nemotron** on **Nebius Token Factory**, equipped with deterministic contradiction detection, human investigator review, and tamper-evident case sealing.
 
 ---
 
-## 🚀 GET STARTED IN 60 SECONDS
+## The Problem
+Digital investigations are severely fragmented across siloed forensic sources: call detail records (CDR), cellular tower pings, GPS telemetry, witness depositions, and disk images. Forensic analysts spend days manually correlating timestamps across incompatible artifacts. Meanwhile, conventional LLM wrappers hallucinate facts, fail at temporal arithmetic, and risk legal compromise by claiming to "detect lies" or "determine guilt."
 
-**New to this repository?**
-
-1. **[👉 START HERE](constitution/07_BOOTSTRAP/START_HERE.md)** - 5 min read
-2. **[🎯 Find What You Need](constitution/07_BOOTSTRAP/WHICH_FILE_TO_READ.md)** - Problem solver
-3. **[👨‍💼 Need an Expert?](constitution/07_BOOTSTRAP/WHICH_AGENT_TO_USE.md)** - Find the right person
-
----
-
-## 📚 THE 7-TIER CONSTITUTION
-
-### 🏛️ **00_CORE** - Supreme Principles
-Supreme constitution and foundational values that guide all engineering decisions.
-- **Purpose:** Define our engineering DNA
-- **Owner:** CTO + Principal Architect
-- **For:** Strategic decisions, culture, vision
-
-👉 [Explore 00_CORE](constitution/00_CORE/README.md)
+## The Solution
+**CrimeKit** bridges deep digital forensics and autonomous multi-agent systems:
+1. **Case Orchestrator** decomposes complex investigative questions into specialist agent subtasks.
+2. **Specialist Agents** ([Detective](file:///Users/buvanrajv/Projects/CrimeKit/backend/app/agents/tools/detective_tool.py), [Timeline](file:///Users/buvanrajv/Projects/CrimeKit/backend/app/agents/tools/timeline_tool.py), [GeoScope](file:///Users/buvanrajv/Projects/CrimeKit/backend/app/agents/tools/geoscope_tool.py), [Testimony](file:///Users/buvanrajv/Projects/CrimeKit/backend/app/agents/testimony_service.py)) execute controlled, bounded tools over verified evidence.
+3. **Deterministic Contradiction Engine** computes mathematical temporal deltas, Haversine geospatial distances, and sequence inversions using code—not LLM arithmetic.
+4. **Interactive Contradiction Matrix** empowers human investigators to review, confirm, or dismiss conflicts.
+5. **Report Agent** generates court-reviewable forensic reports with cryptographic SHA-256 hash ledgers.
+6. **Tamper-Evident Case Sealing** computes an 8-dimensional Merkle root hash and exports a zero-dependency offline archive inspectable in any web browser.
 
 ---
 
-### 🧠 **01_INTELLIGENCE** - Rules & Skills
-Operational knowledge: rules that enforce standards + skills that build expertise.
-- **RULES:** Must-follow constraints and standards
-- **SKILLS:** Expertise documentation and best practices
-- **For:** Learning, enforcement, code review
-
-👉 [Explore 01_INTELLIGENCE](constitution/01_INTELLIGENCE/README.md)
+## Core Forensic & Legal Principles
+- **No Lie Detection:** CrimeKit extracts structured claims and cross-checks them against evidence. It identifies whether statements are *supported*, *contradicted*, *partially supported*, or *unresolved*.
+- **No Guilt Determinations:** The system establishes evidence correlation, not judicial conclusions.
+- **Human Investigator Control:** AI correlates and recommends; the investigator confirms or dismisses.
+- **Strict Case Isolation:** Case data, evidence, timeline events, and archives never cross tenant/case boundaries.
 
 ---
 
-### ⚙️ **02_EXECUTION** - Workflows & Instructions
-Step-by-step processes: how to do your job, what gates to pass, who approves what.
-- **WORKFLOWS:** End-to-end processes (10 workflows)
-- **INSTRUCTIONS:** Domain-specific execution guides
-- **For:** Daily work, project execution, process guidance
+## Multi-Agent Architecture
 
-👉 [Explore 02_EXECUTION](constitution/02_EXECUTION/README.md)
+```
+                    INVESTIGATOR
+                         │
+                         ▼
+                  CRIMEKIT UI
+                         │
+                         ▼
+                CASE ORCHESTRATOR
+                         │
+        ┌────────┬───────┼───────┬────────┐
+        ▼        ▼       ▼       ▼        │
+    Detective Timeline GeoScope Testimony │
+        │        │       │       │        │
+        └────────┴───────┴───────┘        │
+                         ▼
+                SHARED CONTEXT
+                         ▼
+               CONTRADICTION MATRIX
+                         ▼
+                 HUMAN REVIEW
+                         ▼
+                   REPORT AGENT
+                         ▼
+                   CASE SEAL
+                         ▼
+              OFFLINE ARCHIVE
+                         │
+                         ▼
+                INTEGRITY VERIFY
 
-**Key Workflows:**
-- Feature Development (30 days)
-- Code Review (2-3 days)
-- Security Review (3-5 days)
-- Deployment (30 min - 2 hours)
-- Incident Response (minutes to hours)
-- Release Management (weekly cadence)
-- Architecture Review (5 days)
-- Bug Fix (1-3 days)
-- Refactoring (1-2 weeks)
-- Technical Debt Management (ongoing)
 
----
-
-### 🛡️ **03_GOVERNANCE** - Agents & Policies
-Authority structure: who decides what, escalation path, compliance frameworks.
-- **AGENTS:** 9 role definitions with explicit decision authority
-- **POLICIES:** 8 governance frameworks for standards
-- **For:** Decision authority, escalation, compliance
-
-👉 [Explore 03_GOVERNANCE](constitution/03_GOVERNANCE/README.md)
-
-**Agent Roles:**
-- Principal Architect (Supreme)
-- Backend Architect
-- Frontend Architect
-- Database Architect
-- Security Architect (Supreme)
-- QA Architect
-- DevOps Architect
-- UI Architect
-- AI Governance Architect (Supreme)
-
-**Governance Policies:**
-- AI Governance
-- Security Governance
-- Engineering Governance
-- Release Governance
-- Platform Governance
-- Risk Governance
-- FinOps Governance
-- Compliance & Governance
+AI MODEL GATEWAY PATH:
+CrimeKit Agents ──▶ AI Gateway ──▶ Nebius Token Factory ──▶ NVIDIA Nemotron
+```
 
 ---
 
-### 📖 **04_KNOWLEDGE** - Patterns, Templates, Examples
-Reusable assets that accelerate development and ensure consistency.
-- **PATTERNS:** Architectural patterns for common problems
-- **TEMPLATES:** Ready-to-use code templates
-- **CHECKLISTS:** Quality assurance checklists
-- **EXAMPLES:** Working example code
-- **For:** Accelerating development, learning best practices
+## Specialist Agents & Forensic Tools
 
-👉 [Explore 04_KNOWLEDGE](constitution/04_KNOWLEDGE/README.md)
-
----
-
-### 🎯 **05_PROJECT_CONTEXT** - Business Foundation
-Strategic context: why we exist, what we're building, key decisions.
-- **Business Context:** Vision, mission, goals
-- **User Personas:** Who we serve
-- **Product Roadmap:** Where we're going
-- **Architecture Decisions:** Why we chose our tech stack
-- **For:** Strategy, product decisions, business alignment
-
-👉 [Explore 05_PROJECT_CONTEXT](constitution/05_PROJECT_CONTEXT/README.md) *(Coming soon)*
+| Specialist Agent | Core Capabilities | Controlled Forensic Tools |
+| :--- | :--- | :--- |
+| **Case Orchestrator** | Multi-agent task planning, heuristic routing, dependency resolution | `orchestrator_planner`, `handoff_router` |
+| **Detective Agent** | Evidence retrieval, entity resolution, graph exploration | `evidence_search`, `entity_search`, `knowledge_graph_traversal` |
+| **Timeline Agent** | Chronological ordering, temporal clustering, window analysis | `timeline_search`, `temporal_correlation`, `timeline_event_context` |
+| **GeoScope Agent** | Spatial telemetry, sector triangulation, co-location | `location_search`, `movement_trace`, `co_location_analysis` |
+| **Testimony Agent** | Semantic claim decomposition, alibi verification, discrepancy checks | `extract_claims`, `cross_check_temporal`, `cross_check_geographic` |
+| **Report Agent** | Synthesis of formal findings, hash ledgers, chain of custody | `build_report_document`, `render_pdf`, `render_markdown` |
 
 ---
 
-### 💻 **06_WORKSPACE** - Developer Environment
-Setup and configuration: get your computer ready, tools, access.
-- **Setup Guides:** Step-by-step computer setup
-- **Tool Configuration:** IDE, build tools, etc.
-- **Access Provisioning:** Git, servers, services
-- **Troubleshooting:** Common issues and solutions
-- **For:** New machines, environment issues
-
-👉 [Explore 06_WORKSPACE](constitution/06_WORKSPACE/README.md) *(Coming soon)*
+## NVIDIA Nemotron on Nebius
+CrimeKit utilizes **NVIDIA Nemotron** (`nvidia/nemotron-4-340b-instruct`) served via **Nebius Token Factory**:
+- **Why Nemotron?** Advanced instruction-following, structured JSON generation, and multi-turn forensic tool-calling reliability.
+- **Centralized Gateway:** Pluggable `BaseModelProvider` and `NebiusNemotronRuntime` with exponential backoff, rate limit handling, and zero credential leakage.
 
 ---
 
-### 🧭 **07_BOOTSTRAP** - Navigation & Discovery
-Entry points: where everyone starts, problem solver, expert finder.
-- **START_HERE.md:** First-time user guide
-- **WHICH_FILE_TO_READ.md:** Find what you need
-- **WHICH_AGENT_TO_USE.md:** Find the right expert
-- **NEW_PROJECT_CHECKLIST.md:** Start a project
-- **ENTERPRISE_SETUP_GUIDE.md:** Setup guide
-- **For:** Getting started, navigation, discovery
-
-👉 [Explore 07_BOOTSTRAP](constitution/07_BOOTSTRAP/README.md)
+## Tamper-Evident Offline Archive
+When a case investigation is concluded, Phase 10 seals the state into a portable ZIP archive containing:
+1. `manifest.json`: Deterministic canonical snapshot of all evidence, claims, findings, and reviews.
+2. `case-seal.json`: Merkle-style root hash computed across 8 sub-dimensions.
+3. `reports/report.pdf` & `report.json`: Formatted forensic findings and hash ledger.
+4. `archive/verification.html`: **Zero-dependency, standalone browser verifier** that inspects the archive offline without needing an active CrimeKit server or internet connection.
 
 ---
 
-## 🎯 QUICK NAVIGATION
-
-### By Role
-
-| Role | Start Here | Key Resources |
-|------|-----------|----------------|
-| **Backend Engineer** | [START_HERE](constitution/07_BOOTSTRAP/START_HERE.md) | Backend skills, NestJS patterns, database guide |
-| **Frontend Engineer** | [START_HERE](constitution/07_BOOTSTRAP/START_HERE.md) | React skills, component patterns, state management |
-| **DevOps/SRE** | [ENTERPRISE_SETUP_GUIDE](constitution/07_BOOTSTRAP/ENTERPRISE_SETUP_GUIDE.md) | Platform governance, deployment workflow |
-| **Database Architect** | [WHICH_FILE_TO_READ](constitution/07_BOOTSTRAP/WHICH_FILE_TO_READ.md) | Database skills, schema patterns |
-| **Product Manager** | [START_HERE](constitution/07_BOOTSTRAP/START_HERE.md) | Feature workflow, product roadmap, business context |
-| **QA Engineer** | [Testing](constitution/01_INTELLIGENCE/SKILLS/) | Test skills, quality checklists |
-| **Tech Lead** | [WHICH_AGENT_TO_USE](constitution/07_BOOTSTRAP/WHICH_AGENT_TO_USE.md) | Leadership responsibilities, escalation |
-| **New Employee** | [START_HERE](constitution/07_BOOTSTRAP/START_HERE.md) | Company culture, first week guide |
+## Tech Stack
+- **Backend:** FastAPI, Python 3.14, SQLAlchemy, PostgreSQL 16 (pgvector), SQLite (tests), Redis, Neo4j
+- **Frontend:** Next.js 16 (App Router), React 19, TypeScript, TailwindCSS, Lucide Icons, Shadcn UI
+- **AI & Cloud:** NVIDIA Nemotron on Nebius Token Factory (`api.tokenfactory.nebius.com`)
 
 ---
 
-### By Problem
+## Environment Configuration (`.env`)
 
-| Problem | Answer |
-|---------|--------|
-| "How do I build a feature?" | [FEATURE_DEVELOPMENT_WORKFLOW](constitution/02_EXECUTION/WORKFLOWS/FEATURE_DEVELOPMENT_WORKFLOW.md) |
-| "What are the code standards?" | [01_INTELLIGENCE/RULES](constitution/01_INTELLIGENCE/RULES/) |
-| "How do I deploy?" | [DEPLOYMENT_WORKFLOW](constitution/02_EXECUTION/WORKFLOWS/DEPLOYMENT_WORKFLOW.md) |
-| "Who's the expert on X?" | [WHICH_AGENT_TO_USE](constitution/07_BOOTSTRAP/WHICH_AGENT_TO_USE.md) |
-| "What's the best pattern for X?" | [04_KNOWLEDGE/PATTERNS](constitution/04_KNOWLEDGE/PATTERNS/) |
-| "I need a code template" | [04_KNOWLEDGE/TEMPLATES](constitution/04_KNOWLEDGE/TEMPLATES/) |
-| "Security issue - what do I do?" | [INCIDENT_RESPONSE_WORKFLOW](constitution/02_EXECUTION/WORKFLOWS/INCIDENT_RESPONSE_WORKFLOW.md) |
-| "How do we handle tech debt?" | [TECHNICAL_DEBT_WORKFLOW](constitution/02_EXECUTION/WORKFLOWS/TECHNICAL_DEBT_WORKFLOW.md) |
-| "What are my access permissions?" | [GOVERNANCE/POLICIES](constitution/03_GOVERNANCE/POLICIES/) |
-| "How do I use AI tools?" | [AI_GOVERNANCE](constitution/03_GOVERNANCE/POLICIES/AI_GOVERNANCE.md) |
+```bash
+# Nebius Token Factory & NVIDIA Nemotron Gateway
+NEBIUS_API_KEY=your_nebius_api_key_here
+NEBIUS_BASE_URL=https://api.tokenfactory.nebius.com/v1
+NEBIUS_MODEL=nvidia/nemotron-4-340b-instruct
+NEBIUS_TIMEOUT_SECONDS=45.0
+NEBIUS_MAX_RETRIES=2
+AGENT_RUNTIME_MODE=nebius   # Set to 'mock' for local tests / CI
 
----
+# Optional External Intelligence
+TAVILY_API_KEY=your_tavily_key_optional
 
-## 📊 WHAT'S INCLUDED
-
-### Workflows (10)
-✅ Feature development (30 days)  
-✅ Code review (2-3 days)  
-✅ Security review (3-5 days)  
-✅ Architecture review (5 days)  
-✅ Deployment (30 min - 2 hours)  
-✅ Incident response (minutes - hours)  
-✅ Release management (weekly)  
-✅ Bug fix (1-3 days)  
-✅ Refactoring (1-2 weeks)  
-✅ Technical debt (ongoing)  
-
-### Agents (9)
-✅ Principal Architect (Supreme)  
-✅ Backend Architect  
-✅ Frontend Architect  
-✅ Database Architect  
-✅ Security Architect (Supreme)  
-✅ QA Architect  
-✅ DevOps Architect  
-✅ UI Architect  
-✅ AI Governance Architect (Supreme)  
-
-### Policies (8)
-✅ AI Governance  
-✅ Security Governance  
-✅ Engineering Governance  
-✅ Release Governance  
-✅ Platform Governance  
-✅ Risk Governance  
-✅ FinOps Governance  
-✅ Compliance & Governance  
-
-### Knowledge Base
-✅ Architectural patterns  
-✅ Code templates  
-✅ Quality checklists  
-✅ Working examples  
-
-### Navigation
-✅ Start here guide  
-✅ Problem solver  
-✅ Expert finder  
-✅ Project checklist  
-✅ Setup guide  
+# Core Services
+DATABASE_URL=postgresql://crimekit_app:password@postgres:5432/crimekit
+REDIS_URL=redis://:password@redis:6379/0
+NEO4J_URI=bolt://neo4j:7687
+```
 
 ---
 
-## 🔑 KEY PRINCIPLES
+## Live Multi-Agent Dashboard (Phase 12)
 
-✅ **Clear Authority:** Everyone knows who decides what  
-✅ **Documented Processes:** Workflows guide execution  
-✅ **Quality Standards:** Rules enforce consistency  
-✅ **Expert Knowledge:** Skills accelerate learning  
-✅ **Reusable Assets:** Patterns and templates save time  
-✅ **Transparent Governance:** Policies are explicit  
-✅ **Easy Navigation:** Bootstrap guides discovery  
+The **Live Multi-Agent Investigation Dashboard** brings all forensic specialists, tools, and evidence streams into a unified real-time operations console:
 
----
-
-## 📈 METRICS & HEALTH
-
-| Metric | Target | Status |
-|--------|--------|--------|
-| Constitution coverage | 100% of work types | ✅ |
-| Agent expertise coverage | 100% of domains | ✅ |
-| Workflow documentation | 100% complete | ✅ |
-| Team adoption | > 80% | 📊 |
-| Documentation updates | Quarterly | ✅ |
-| Process compliance | > 95% | 📊 |
+- **Case-Scoped WebSocket Streaming:** Connects to `ws://{host}/ws/case/{case_id}` with strict tenant authorization and 25s ping-pong keepalive.
+- **Live Agent Board:** Real-time state indicators (`IDLE`, `PLANNING`, `QUEUED`, `RUNNING`, `COMPLETED`, `FAILED`) driven directly by backend execution events.
+- **Tool Execution Feed:** Live updates as forensic tools (`evidence_search`, `timeline_search`, `co_location_analysis`) query evidence databases.
+- **Streaming Findings & Evidence Citations:** Real findings pop up immediately as specialists uncover leads with 1-click links to raw evidence (`EV-087`, `EV-104`).
+- **Interactive Contradiction Matrix:** Automated discrepancy detection with instant 1-click human investigator review (`CONFIRM`, `DISMISS`, `UNRESOLVED`).
+- **Tamper-Evident Case Sealing:** Cryptographic 8-dimensional Merkle root calculation and offline browser-verifiable archive export.
 
 ---
 
-## 🚦 NEXT STEPS
+## Running Locally
 
-### Just Arriving?
-1. Read [START_HERE](constitution/07_BOOTSTRAP/START_HERE.md)
-2. Set up environment with [ENTERPRISE_SETUP_GUIDE](constitution/07_BOOTSTRAP/ENTERPRISE_SETUP_GUIDE.md)
-3. Pick your first task and find the workflow
+### 1. Backend Setup
+```bash
+cd backend
+python -m venv venv && source venv/bin/activate
+pip install -r requirements.txt
+uvicorn app.main:app --host 0.0.0.0 --port 8002 --reload
+```
 
-### Building Something?
-1. Find the [WORKFLOW](constitution/02_EXECUTION/WORKFLOWS/) for your work
-2. Follow the phases and gates
-3. Reference [KNOWLEDGE](constitution/04_KNOWLEDGE/) for patterns/templates
-4. Use [CHECKLISTS](constitution/04_KNOWLEDGE/CHECKLISTS/) before submitting
+### 2. Frontend Setup
+```bash
+cd frontend
+npm install
+npm run dev
+```
 
-### Making a Decision?
-1. Check [AGENT](constitution/03_GOVERNANCE/AGENTS/) for authority
-2. Reference relevant [POLICY](constitution/03_GOVERNANCE/POLICIES/)
-3. Escalate if needed via chain
-4. Document decision
-
-### Learning Something?
-1. Find topic in [INTELLIGENCE](constitution/01_INTELLIGENCE/SKILLS/)
-2. Study the skill document
-3. Review [KNOWLEDGE](constitution/04_KNOWLEDGE/) for patterns/examples
-4. Practice with template
+### 3. Running Test Suites
+```bash
+# Execute complete multi-agent test suite (Phases 4 through 12)
+AGENT_RUNTIME_MODE=mock TESTING=1 pytest backend/tests/test_phase4_detective_tools.py backend/tests/test_phase5_timeline_geoscope_tools.py backend/tests/test_phase6_case_orchestrator.py backend/tests/test_phase7_report_agent.py backend/tests/test_phase8_testimony_agent.py backend/tests/test_phase9_contradiction_matrix.py backend/tests/test_phase10_case_archive.py backend/tests/test_phase11_smoke_and_hardening.py backend/tests/test_phase12_live_dashboard.py
+```
 
 ---
 
-## 🤝 GOVERNANCE CONTACTS
-
-**Architecture Questions:**  
-→ [WHICH_AGENT_TO_USE](constitution/07_BOOTSTRAP/WHICH_AGENT_TO_USE.md)
-
-**Process Questions:**  
-→ Check workflow in [02_EXECUTION](constitution/02_EXECUTION/)
-
-**Policy Questions:**  
-→ Reference [03_GOVERNANCE/POLICIES](constitution/03_GOVERNANCE/POLICIES/)
-
-**On-call Issues:**  
-→ [INCIDENT_RESPONSE_WORKFLOW](constitution/02_EXECUTION/WORKFLOWS/INCIDENT_RESPONSE_WORKFLOW.md)
-
----
-
-## 📅 MAINTENANCE & UPDATES
-
-- **Quarterly:** Review and update policies
-- **Monthly:** Update metrics and dashboards
-- **As Needed:** Update workflows based on lessons learned
-- **Annually:** Comprehensive constitution review
-
-**Last Review:** June 2026  
-**Next Review:** September 2026  
-
----
-
-## 🎓 LEARNING PATH
-
-### Week 1: Foundations
-- Read 00_CORE principles
-- Complete 06_WORKSPACE setup
-- Read relevant 01_INTELLIGENCE rules
-
-### Week 2-3: Execution
-- Study 02_EXECUTION workflows
-- Follow project workflow for first task
-- Reference 04_KNOWLEDGE patterns
-
-### Week 4+: Mastery
-- Deep dive on specialty
-- Reference policies as needed
-- Contribute to knowledge base
-
----
-
-## 📞 SUPPORT
-
-**Questions?**
-- Check [WHICH_FILE_TO_READ](constitution/07_BOOTSTRAP/WHICH_FILE_TO_READ.md)
-- Ask in #architecture channel
-- Request expert via [WHICH_AGENT_TO_USE](constitution/07_BOOTSTRAP/WHICH_AGENT_TO_USE.md)
-
-**Found an issue?**
-- Create GitHub issue
-- Submit PR with improvement
-
-**Want to contribute?**
-- Follow contribution guidelines
-- Get peer review
-- Help make constitution better
-
----
-
-**Constitution Status:** ACTIVE  
-**Owner:** Principal Architect  
-**Version:** 1.0  
-**Last Updated:** June 2026  
-
-👉 **[START YOUR JOURNEY →](constitution/07_BOOTSTRAP/START_HERE.md)**
-
+## Security & Hackathon Compliance
+- **Zero Committed Secrets:** Verified clean git status without credentials.
+- **Truthful Status Display:** The AI Workspace explicitly displays `Nebius / Nemotron` and never masks mock execution as live.
+- **Case Boundary Defense:** Direct cross-case queries return empty or access-denied results.

@@ -14,27 +14,22 @@ import {
 import { useQueueStats } from "@/hooks/queries/useStats";
 import { useWorkspaceProgress } from "@/hooks/queries/useWorkspace";
 
+import type { LucideIcon } from "lucide-react";
+import { AGENT_LIST, AGENT_REGISTRY } from "../constants/agentRegistry";
+import { useAIStore } from "../store/aiStore";
+
 interface AgentInfo {
   name: string;
   description: string;
-  icon: string;
+  icon: LucideIcon;
   status: "idle" | "running" | "queued" | "completed" | "failed";
 }
 
-const KNOWN_AGENTS: Omit<AgentInfo, "status">[] = [
-  { name: "Supervisor", description: "Task orchestration & routing", icon: "🧠" },
-  { name: "Detective", description: "Entity extraction & analysis", icon: "🔍" },
-  { name: "Correlation", description: "Cross-entity relationship discovery", icon: "🔗" },
-  { name: "Timeline", description: "Temporal event extraction", icon: "📅" },
-  { name: "Evidence", description: "Evidence processing & analysis", icon: "📄" },
-  { name: "Knowledge Graph", description: "Graph construction & queries", icon: "🕸️" },
-  { name: "Report", description: "Report generation & formatting", icon: "📋" },
-  { name: "Search", description: "Full-text & semantic search", icon: "🔎" },
-  { name: "OCR", description: "Optical character recognition", icon: "👁️" },
-  { name: "Forensic", description: "Deep forensic analysis", icon: "🔬" },
-  { name: "RAG", description: "Retrieval-augmented generation", icon: "📚" },
-  { name: "Embedding", description: "Vector embedding generation", icon: "🔢" },
-];
+const KNOWN_AGENTS: Omit<AgentInfo, "status">[] = AGENT_LIST.map((a) => ({
+  name: a.name,
+  description: a.tagline,
+  icon: a.icon,
+}));
 
 function StatusIcon({ status }: { status: AgentInfo["status"] }) {
   switch (status) {
@@ -102,6 +97,11 @@ export function AgentStatusPanel({ caseId: _caseId }: { caseId: string }) {
   const completedCount = agents.filter((a) => a.status === "completed").length;
   const failedCount = agents.filter((a) => a.status === "failed").length;
 
+  // Track active agent from AI workspace store
+  const { selectedAgentId } = useAIStore();
+  const currentAgent = AGENT_REGISTRY[selectedAgentId] || AGENT_REGISTRY["detective"];
+  const toolCount = currentAgent.tools.length;
+
   return (
     <div className="flex flex-col h-full">
       <div className="flex items-center justify-between px-4 py-3 border-b">
@@ -118,6 +118,19 @@ export function AgentStatusPanel({ caseId: _caseId }: { caseId: string }) {
           )}
         </div>
       </div>
+
+      {/* Nebius x NVIDIA Nemotron Gateway Badge */}
+      <div className="px-4 py-2 bg-muted/40 border-b flex items-center justify-between text-xs">
+        <div className="flex items-center gap-1.5">
+          <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+          <span className="font-semibold text-foreground">{currentAgent.shortName}</span>
+          <span className="text-[10px] text-muted-foreground ml-1">· {toolCount} Tools Active</span>
+        </div>
+        <Badge variant="outline" className="text-[10px] bg-background font-mono">
+          NVIDIA Nemotron
+        </Badge>
+      </div>
+
 
       {isLoading ? (
         <div className="p-4 space-y-3">
@@ -155,24 +168,29 @@ export function AgentStatusPanel({ caseId: _caseId }: { caseId: string }) {
               </div>
             )}
 
-            {agents.map((agent) => (
-              <div
-                key={agent.name}
-                className="flex items-center gap-3 p-2 rounded-md hover:bg-muted/30 transition-colors"
-              >
-                <span className="text-lg">{agent.icon}</span>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm font-medium">{agent.name}</span>
-                    <StatusIcon status={agent.status} />
+            {agents.map((agent) => {
+              const Icon = agent.icon;
+              return (
+                <div
+                  key={agent.name}
+                  className="flex items-center gap-3 p-2 rounded-md hover:bg-muted/30 transition-colors"
+                >
+                  <span className="flex h-7 w-7 items-center justify-center rounded-md bg-primary/10 text-primary border border-primary/20 shrink-0">
+                    <Icon className="h-4 w-4 stroke-[1.8]" aria-hidden="true" />
+                  </span>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-medium">{agent.name}</span>
+                      <StatusIcon status={agent.status} />
+                    </div>
+                    <p className="text-[10px] text-muted-foreground truncate">
+                      {agent.description}
+                    </p>
                   </div>
-                  <p className="text-[10px] text-muted-foreground truncate">
-                    {agent.description}
-                  </p>
+                  <StatusBadge status={agent.status} />
                 </div>
-                <StatusBadge status={agent.status} />
-              </div>
-            ))}
+              );
+            })}
           </div>
         </ScrollArea>
       )}

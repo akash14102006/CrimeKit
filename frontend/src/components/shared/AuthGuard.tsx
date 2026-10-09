@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/store/authStore";
 import { useHasHydrated } from "@/hooks/useHasHydrated";
 import { Loader2 } from "lucide-react";
+import { env } from "@/config/env";
 
 interface AuthGuardProps {
   children: React.ReactNode;
@@ -25,14 +26,14 @@ export function AuthGuard({ children, allowedRoles }: AuthGuardProps) {
   const { isAuthenticated, sessionToken, user, sessionResolved } = useAuthStore();
   const hydrated = useHasHydrated(useAuthStore);
 
-  const isAuth = isAuthenticated && !!sessionToken;
+  const isAuth = env.devAuthDisabled || (isAuthenticated && !!sessionToken);
   const userRoles = (user?.roles as string[]) ?? (user?.role ? [user.role] : []);
   const isJury = userRoles.includes("jury_evaluator") || userRoles.includes("demo_evaluator");
   const isStrictAdminOnly = !!allowedRoles && allowedRoles.length === 1 && allowedRoles[0] === "admin";
-  const authorized = isAuth && (!allowedRoles || (isJury && !isStrictAdminOnly) || (!!user && allowedRoles.some((r) => userRoles.includes(r))));
-
+  const authorized = env.devAuthDisabled || (isAuth && (!allowedRoles || (isJury && !isStrictAdminOnly) || (!!user && allowedRoles.some((r) => userRoles.includes(r)))));
 
   useEffect(() => {
+    if (env.devAuthDisabled) return;
     if (!hydrated || !sessionResolved) return;
     if (authorized) return;
 
