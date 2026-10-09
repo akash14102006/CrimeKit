@@ -7,26 +7,32 @@ import type {
   EvidenceUploadResponse,
 } from "@/types/evidence";
 
+import { useAuthStore } from "@/store/authStore";
+
 export function useAllEvidence(params?: EvidenceListParams) {
+  const { isAuthenticated, sessionToken } = useAuthStore();
   return useQuery({
     queryKey: ["evidence", params],
     queryFn: () => evidenceService.list(params),
+    enabled: isAuthenticated && !!sessionToken,
   });
 }
 
 export function useEvidence(id?: string) {
+  const { isAuthenticated, sessionToken } = useAuthStore();
   return useQuery({
     queryKey: ["evidence", id],
     queryFn: () => evidenceService.detail(id as string),
-    enabled: !!id,
+    enabled: !!id && isAuthenticated && !!sessionToken,
   });
 }
 
 export function useCaseEvidence(caseId?: string) {
+  const { isAuthenticated, sessionToken } = useAuthStore();
   return useQuery({
     queryKey: ["evidence", "case", caseId],
     queryFn: () => evidenceService.byCase(caseId as string),
-    enabled: !!caseId,
+    enabled: !!caseId && isAuthenticated && !!sessionToken,
   });
 }
 

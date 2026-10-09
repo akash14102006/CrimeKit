@@ -514,6 +514,34 @@ def register(payload: dict, db: Session = Depends(get_db)):
     }
 
 
+@router.post('/refresh')
+def refresh_token_endpoint(payload: dict, db: Session = Depends(get_db)):
+    """Refresh an access token using a valid refresh token."""
+    refresh_token = payload.get("refresh_token") or payload.get("refreshToken")
+    if not refresh_token:
+        raise HTTPException(status_code=422, detail="refresh_token required")
+    try:
+        decoded = jwt.decode(refresh_token, SECRET_KEY, algorithms=[ALGORITHM])
+        if decoded.get("type") != "refresh":
+            raise HTTPException(status_code=401, detail="Invalid token type")
+        user_id = decoded.get("sub")
+        user = db.query(models.User).filter(models.User.id == user_id).first()
+        if not user or not user.is_active:
+            raise HTTPException(status_code=401, detail="User not found or disabled")
+        raw_roles = [r.name for r in user.roles] if user.roles else ["investigator"]
+        normalized_roles = list(dict.fromkeys(_normalize_role(r) for r in raw_roles))
+        new_access_token = create_access_token(
+            data={"sub": user.id, "email": user.email, "roles": normalized_roles}
+        )
+        return {
+            "access_token": new_access_token,
+            "refresh_token": refresh_token,
+            "token_type": "bearer",
+        }
+    except JWTError:
+        raise HTTPException(status_code=401, detail="Invalid or expired refresh token")
+
+
 @router.get('/me')
 def get_me(current_user: models.User = Depends(get_current_user)):
     """Get the current user profile with normalized Descope-synced roles and permissions."""

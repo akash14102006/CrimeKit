@@ -1,19 +1,23 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { caseService, type CaseListParams } from "@/services/caseService";
 import type { CaseCreate, CaseListResponse, CaseOut, CaseUpdate } from "@/types/case";
+import { useAuthStore } from "@/store/authStore";
 
 export function useCases(params?: CaseListParams) {
+  const { isAuthenticated, sessionToken } = useAuthStore();
   return useQuery({
     queryKey: ["cases", params],
     queryFn: () => caseService.list(params),
+    enabled: isAuthenticated && !!sessionToken,
   });
 }
 
 export function useCase(id?: string) {
+  const { isAuthenticated, sessionToken } = useAuthStore();
   return useQuery({
     queryKey: ["cases", id],
     queryFn: () => caseService.detail(id as string),
-    enabled: !!id,
+    enabled: !!id && isAuthenticated && !!sessionToken,
   });
 }
 

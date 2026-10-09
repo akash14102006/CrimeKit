@@ -41,14 +41,46 @@ apiClient.interceptors.request.use((config) => {
 
 let isRefreshing = false;
 let refreshSubscribers: Array<(token: string | null) => void> = [];
+let redirectThrottleTimer: ReturnType<typeof setTimeout> | null = null;
 
 const flushRefreshSubscribers = (token: string | null) => {
   refreshSubscribers.forEach((callback) => callback(token));
   refreshSubscribers = [];
 };
 
+function isDescopeToken(token: string): boolean {
+  if (!token || typeof token !== "string") return false;
+  try {
+    const parts = token.split(".");
+    if (parts.length !== 3) return false;
+    const header = JSON.parse(atob(parts[0]));
+    return header.alg && header.alg !== "HS256";
+  } catch {
+    return false;
+  }
+}
+
+function handleAuthFailure(error: AxiosError) {
+  const { clearSession } = useAuthStore.getState();
+  clearSession();
+  isRefreshing = false;
+  flushRefreshSubscribers(null);
+
+  if (typeof window !== "undefined") {
+    const pathname = window.location.pathname;
+    if (!pathname.startsWith("/login") && !pathname.startsWith("/mfa") && !pathname.startsWith("/session-expired")) {
+      if (!redirectThrottleTimer) {
+        redirectThrottleTimer = setTimeout(() => {
+          redirectThrottleTimer = null;
+          window.location.href = "/login";
+        }, 100);
+      }
+    }
+  }
+}
+
 const isAuthEndpoint = (url?: string) =>
-  typeof url === "string" && url.includes("/auth/");
+  typeof url === "string" && (url.includes("/auth/login") || url.includes("/auth/refresh"));
 
 let lastNetworkToastTime = 0;
 function throttleNetworkToast() {
@@ -65,23 +97,23 @@ function throttleNetworkToast() {
 }
 
 /**
- * Response interceptor — handle 401 with Descope session refresh.
- *
- * Strategy:
- * 1. On 401, check if we have a Descope refresh token.
- * 2. If yes, attempt to refresh the session via Descope's refresh endpoint.
- * 3. If refresh succeeds, retry the original request with the new token.
- * 4. If refresh fails, clear session and redirect to login.
- *
- * Note: Descope's AuthProvider handles token refresh automatically.
- * This interceptor is a safety net for edge cases (expired tokens, etc.).
+ * Response interceptor — handle 401 with concurrency-safe session refresh.
  */
 apiClient.interceptors.response.use(
   (response) => response,
   async (error: AxiosError) => {
     const originalRequest = error.config as RetriableConfig | undefined;
 
-    if (error.response?.status === 401 && originalRequest && !originalRequest._retry) {
+    if (error.response?.status === 401) {
+      const url = originalRequest?.url || "";
+
+      // 1. Never retry auth endpoints or requests already retried
+      if (!originalRequest || originalRequest._retry || isAuthEndpoint(url)) {
+        handleAuthFailure(error);
+        return Promise.reject(error);
+      }
+
+      // 2. If a refresh is already in flight, queue this request
       if (isRefreshing) {
         return new Promise((resolve, reject) => {
           refreshSubscribers.push((token) => {
@@ -89,6 +121,7 @@ apiClient.interceptors.response.use(
             if (originalRequest.headers) {
               originalRequest.headers.Authorization = `Bearer ${token}`;
             }
+            originalRequest._retry = true;
             resolve(apiClient(originalRequest));
           });
         });
@@ -98,22 +131,45 @@ apiClient.interceptors.response.use(
       isRefreshing = true;
 
       try {
-        const { refreshToken, clearSession } = useAuthStore.getState();
+        const { refreshToken, sessionToken } = useAuthStore.getState();
 
         if (!refreshToken) {
-          clearSession();
-          if (typeof window !== "undefined") {
-            window.location.href = "/login";
-          }
+          handleAuthFailure(error);
           return Promise.reject(error);
         }
 
-        // Attempt Descope session refresh using the SDK.
-        const refreshResult = await descopeRefresh(refreshToken);
+        let newSession: string | null = null;
+        let newRefresh: string | null = null;
 
-        if (refreshResult?.data?.sessionJwt) {
-          const newSession = refreshResult.data.sessionJwt;
-          const newRefresh = refreshResult.data.refreshJwt ?? refreshToken;
+        if (isDescopeToken(refreshToken) || (sessionToken && isDescopeToken(sessionToken))) {
+          // Attempt Descope session refresh using the SDK
+          try {
+            const refreshResult = await descopeRefresh(refreshToken);
+            if (refreshResult?.data?.sessionJwt) {
+              newSession = refreshResult.data.sessionJwt;
+              newRefresh = refreshResult.data.refreshJwt ?? refreshToken;
+            }
+          } catch (dsErr) {
+            console.warn("[CrimeKit] Descope refresh failed:", dsErr);
+          }
+        } else {
+          // Attempt Backend refresh for local JWT tokens
+          try {
+            const resp = await axios.post<{ access_token: string; refresh_token?: string }>(
+              `${getBaseUrl()}/auth/refresh`,
+              { refresh_token: refreshToken },
+              { timeout: 5000 },
+            );
+            if (resp.data?.access_token) {
+              newSession = resp.data.access_token;
+              newRefresh = resp.data.refresh_token ?? refreshToken;
+            }
+          } catch (beErr) {
+            console.warn("[CrimeKit] Backend token refresh failed:", beErr);
+          }
+        }
+
+        if (newSession) {
           useAuthStore.getState().setSession(newSession, newRefresh);
           isRefreshing = false;
           flushRefreshSubscribers(newSession);
@@ -123,28 +179,13 @@ apiClient.interceptors.response.use(
           return apiClient(originalRequest);
         }
 
-        // Refresh failed — clear session.
-        clearSession();
-        isRefreshing = false;
-        flushRefreshSubscribers(null);
-        if (typeof window !== "undefined") {
-          window.location.href = "/login";
-        }
+        // Refresh failed — clear session and reject
+        handleAuthFailure(error);
         return Promise.reject(error);
       } catch (refreshError) {
-        const { clearSession } = useAuthStore.getState();
-        clearSession();
-        isRefreshing = false;
-        flushRefreshSubscribers(null);
-        if (typeof window !== "undefined") {
-          window.location.href = "/login";
-        }
+        handleAuthFailure(error);
         return Promise.reject(refreshError);
       }
-    }
-
-    if (isAuthEndpoint(originalRequest?.url)) {
-      return Promise.reject(error);
     }
 
     if (error.response) {

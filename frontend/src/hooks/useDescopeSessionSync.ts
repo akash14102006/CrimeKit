@@ -16,14 +16,18 @@ import { extractDisplayName } from "@/lib/userDisplay";
  * - explicit logout
  */
 export function useDescopeSessionSync() {
-  const { sessionToken, isAuthenticated: descopeAuthenticated } = useSession();
+  const { sessionToken, isAuthenticated: descopeAuthenticated, isSessionLoading } = useSession();
   const { user: descopeUser } = useUser();
 
   const { setSession, setUser, markSessionResolved } = useAuthStore();
-  const hasResolved = useRef(false);
   const hasSyncedFromDescope = useRef(false);
 
   useEffect(() => {
+    // If Descope is still resolving session from storage/cookies, wait
+    if (isSessionLoading) {
+      return;
+    }
+
     // When Descope confirms auth AND provides a token, sync to Zustand.
     if (descopeAuthenticated && sessionToken) {
       setSession(sessionToken, null);
@@ -55,13 +59,11 @@ export function useDescopeSessionSync() {
       }
     }
 
-    if (!hasResolved.current) {
-      hasResolved.current = true;
-      markSessionResolved();
-    }
+    markSessionResolved();
   }, [
     descopeAuthenticated,
     sessionToken,
+    isSessionLoading,
     descopeUser,
     setSession,
     setUser,

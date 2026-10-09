@@ -40,6 +40,8 @@ const DescopeFlow = dynamic(
   },
 );
 
+import { authService } from "@/services/authService";
+
 /**
  * LoginForm — CrimeKit Enterprise Authentication.
  * Powered exclusively by Enterprise Identity Provider (Descope).
@@ -49,20 +51,35 @@ export function LoginForm() {
   const { setSession, setUser, markSessionResolved } = useAuthStore();
   const navigated = useRef(false);
   const [error, setError] = useState("");
+  const [isLoggingInDev, setIsLoggingInDev] = useState(false);
 
-  const bypassToDev = useCallback(() => {
-    setSession(DEV_ADMIN_TOKEN, DEV_ADMIN_TOKEN);
-    setUser(DEV_ADMIN_PROFILE);
-    markSessionResolved();
-    navigated.current = true;
-    router.replace("/dashboard");
-  }, [router, setSession, setUser, markSessionResolved]);
+  const handleExplicitDemoLogin = useCallback(async () => {
+    if (navigated.current || isLoggingInDev) return;
+    setIsLoggingInDev(true);
+    setError("");
 
-  useEffect(() => {
-    if (env.devAuthDisabled && !navigated.current) {
-      bypassToDev();
+    try {
+      const resp = await authService.login("admin@crimekit.local");
+      if (resp?.access_token) {
+        setSession(resp.access_token, resp.refresh_token ?? null);
+        if (resp.user) {
+          setUser(resp.user);
+        } else {
+          setUser(DEV_ADMIN_PROFILE);
+        }
+        markSessionResolved();
+        navigated.current = true;
+        router.replace("/dashboard");
+      } else {
+        setError("Login response did not include a valid session token.");
+      }
+    } catch (err) {
+      console.error("[CrimeKit] Explicit demo login failed:", err);
+      setError("Unable to authenticate with development credentials. Ensure backend is running.");
+    } finally {
+      setIsLoggingInDev(false);
     }
-  }, [bypassToDev]);
+  }, [router, setSession, setUser, markSessionResolved, isLoggingInDev]);
 
   const handleSuccess = useCallback(
     (
@@ -206,15 +223,23 @@ export function LoginForm() {
           theme="dark"
         />
 
-        {env.devAuthDisabled && (
+        {(env.devAuthDisabled || env.authDemoMode || env.demoMode) && (
           <div className="mt-4 pt-4 border-t border-border">
             <Button
               type="button"
               variant="default"
+              disabled={isLoggingInDev}
               className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-medium"
-              onClick={bypassToDev}
+              onClick={handleExplicitDemoLogin}
             >
-              Enter Dev Mode (Admin Bypass)
+              {isLoggingInDev ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Authenticating...
+                </>
+              ) : (
+                "Demo / Evaluator Quick Access"
+              )}
             </Button>
           </div>
         )}

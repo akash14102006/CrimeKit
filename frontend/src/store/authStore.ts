@@ -62,18 +62,14 @@ interface AuthState {
   markSessionResolved: () => void;
 }
 
-const initialDevUser = env.devAuthDisabled ? DEV_ADMIN_PROFILE : null;
-const initialDevToken = env.devAuthDisabled ? DEV_ADMIN_TOKEN : null;
-const initialDevAuth = env.devAuthDisabled;
-
 export const useAuthStore = create<AuthState>()(
   persist(
     (set) => ({
-      user: initialDevUser,
-      sessionToken: initialDevToken,
-      refreshToken: initialDevToken,
-      isAuthenticated: initialDevAuth,
-      sessionResolved: env.devAuthDisabled,
+      user: null,
+      sessionToken: null,
+      refreshToken: null,
+      isAuthenticated: false,
+      sessionResolved: false,
 
       setSession: (sessionToken, refreshToken) =>
         set({
@@ -85,17 +81,6 @@ export const useAuthStore = create<AuthState>()(
       setUser: (user) => set({ user }),
 
       clearSession: () => {
-        if (env.devAuthDisabled) {
-          // In development mode with auth disabled, stay logged in as dev admin
-          set({
-            user: DEV_ADMIN_PROFILE,
-            sessionToken: DEV_ADMIN_TOKEN,
-            refreshToken: DEV_ADMIN_TOKEN,
-            isAuthenticated: true,
-            sessionResolved: true,
-          });
-          return;
-        }
         set({
           user: null,
           sessionToken: null,

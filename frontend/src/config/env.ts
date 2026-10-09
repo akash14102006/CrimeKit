@@ -53,5 +53,5 @@ export const env = {
   devAuthDisabled:
     process.env.NEXT_PUBLIC_DISABLE_AUTH !== undefined
       ? process.env.NEXT_PUBLIC_DISABLE_AUTH === "true"
-      : process.env.NODE_ENV !== "production",
+      : false,
 } as const;

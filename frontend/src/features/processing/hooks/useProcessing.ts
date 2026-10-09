@@ -5,10 +5,12 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { processingService, distributedService } from "@/services/processingService";
 import { useProcessingStore } from "../store/processingStore";
 import { useDebounce } from "@/hooks/useDebounce";
+import { useAuthStore } from "@/store/authStore";
 import type { DistributedTask, DistributedTaskStatus } from "@/types/processing";
 
 export function useQueueStats() {
   const { setQueueStats } = useProcessingStore();
+  const { isAuthenticated, sessionToken } = useAuthStore();
 
   return useQuery({
     queryKey: ["processing", "queue", "stats"],
@@ -17,13 +19,15 @@ export function useQueueStats() {
       setQueueStats(stats);
       return stats;
     },
-    refetchInterval: 5000,
+    enabled: isAuthenticated && !!sessionToken,
+    refetchInterval: isAuthenticated && !!sessionToken ? 5000 : false,
     staleTime: 3000,
   });
 }
 
 export function useWorkers() {
   const { setWorkers } = useProcessingStore();
+  const { isAuthenticated, sessionToken } = useAuthStore();
 
   return useQuery({
     queryKey: ["processing", "workers"],
@@ -32,13 +36,15 @@ export function useWorkers() {
       setWorkers(response.workers);
       return response;
     },
-    refetchInterval: 10000,
+    enabled: isAuthenticated && !!sessionToken,
+    refetchInterval: isAuthenticated && !!sessionToken ? 10000 : false,
     staleTime: 5000,
   });
 }
 
 export function useRunningTasks() {
   const { setRunningTasks, runningTasks } = useProcessingStore();
+  const { isAuthenticated, sessionToken } = useAuthStore();
 
   const query = useQuery({
     queryKey: ["processing", "tasks", "running"],
@@ -46,7 +52,8 @@ export function useRunningTasks() {
       const depth = await distributedService.queueDepth();
       return depth;
     },
-    refetchInterval: 5000,
+    enabled: isAuthenticated && !!sessionToken,
+    refetchInterval: isAuthenticated && !!sessionToken ? 5000 : false,
     staleTime: 3000,
   });
 
@@ -55,6 +62,7 @@ export function useRunningTasks() {
 
 export function useFailedTasks() {
   const { setFailedTasks } = useProcessingStore();
+  const { isAuthenticated, sessionToken } = useAuthStore();
 
   return useQuery({
     queryKey: ["processing", "tasks", "failed"],
@@ -72,7 +80,8 @@ export function useFailedTasks() {
       );
       return dlq;
     },
-    refetchInterval: 15000,
+    enabled: isAuthenticated && !!sessionToken,
+    refetchInterval: isAuthenticated && !!sessionToken ? 15000 : false,
     staleTime: 10000,
   });
 }
